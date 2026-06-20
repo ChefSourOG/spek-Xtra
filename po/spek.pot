@@ -1,0 +1,534 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-20 14:44-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: ../data/spek.desktop.in.in.h:1
+msgid "Spek"
+msgstr ""
+
+#: ../data/spek.desktop.in.in.h:2
+msgid "Spectrum Analyser"
+msgstr ""
+
+#: ../data/spek.desktop.in.in.h:3
+msgid "View spectrograms of your audio files"
+msgstr ""
+
+#: ../data/spek.desktop.in.in.h:4
+msgid "Spek Spectrum Analyser"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:24
+msgid "Export Image"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:44
+msgid "Save to:"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:47
+msgid "Browse..."
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:53
+msgid "File name:"
+msgstr ""
+
+#. Resolution presets.
+#: ../src/spek-export-dialog.cc:59
+msgid "Resolution:"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:60
+msgid "Standard (1100x600)"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:61
+msgid "High (1650x900)"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:62
+msgid "Maximum (2200x1200)"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:63
+msgid "Custom"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:70
+msgid "Width:"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:73
+msgid "Height:"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:80
+msgid "Format:"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:82
+msgid "PNG"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:83
+msgid "JPEG"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:84
+msgid "BMP"
+msgstr ""
+
+#. Aspect ratio.
+#: ../src/spek-export-dialog.cc:90
+msgid "Keep aspect ratio"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:133
+msgid "PNG images"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:134
+msgid "JPEG images"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:135
+msgid "BMP images"
+msgstr ""
+
+#: ../src/spek-export-dialog.cc:140
+msgid "Save Image"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:12
+msgid "Audio Info"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:34
+msgid "File Type:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:35
+msgid "Sample Rate:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:36
+msgid "Bit Depth:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:37
+msgid "Channels:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:38
+msgid "Duration:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:39
+msgid "Nyquist Freq.:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:40
+msgid "File Size:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:41
+msgid "Total Samples:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:42
+msgid "Analysis Frames:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:43
+msgid "FFT Size:"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:44
+msgid "Freq. Resolution:"
+msgstr ""
+
+#. Set initial placeholder values; no parent layout yet because the panel
+#. is still being constructed.
+#: ../src/spek-info-panel.cc:53 ../src/spek-info-panel.cc:54
+#: ../src/spek-info-panel.cc:55 ../src/spek-info-panel.cc:56
+#: ../src/spek-info-panel.cc:57 ../src/spek-info-panel.cc:58
+#: ../src/spek-info-panel.cc:59 ../src/spek-info-panel.cc:60
+#: ../src/spek-info-panel.cc:61 ../src/spek-info-panel.cc:62
+#: ../src/spek-info-panel.cc:63 ../src/spek-info-panel.cc:112
+#: ../src/spek-info-panel.cc:113 ../src/spek-info-panel.cc:114
+#: ../src/spek-info-panel.cc:115 ../src/spek-info-panel.cc:116
+#: ../src/spek-info-panel.cc:117 ../src/spek-info-panel.cc:118
+#: ../src/spek-info-panel.cc:119 ../src/spek-info-panel.cc:120
+#: ../src/spek-info-panel.cc:121 ../src/spek-info-panel.cc:122
+msgid "—"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:92
+msgid "Unknown"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:93 ../src/spek-info-panel.cc:99
+#: ../src/spek-pipeline.cc:194
+#, c-format
+msgid "%d Hz"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:95
+#, c-format
+msgid "%d bits"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:96
+msgid "N/A"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:100
+#, c-format
+msgid "%.2f MB"
+msgstr ""
+
+#: ../src/spek-info-panel.cc:104
+#, c-format
+msgid "%.2f Hz"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:188
+#, c-format
+msgid "%d kbps"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:202
+#, c-format
+msgid "%d bit"
+msgid_plural "%d bits"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/spek-pipeline.cc:258
+msgid "Cannot open input file"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:261
+msgid "Cannot find stream info"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:264
+msgid "The file contains no audio streams"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:267
+msgid "Cannot find decoder"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:270
+msgid "Unknown duration"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:273
+msgid "No audio channels"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:276
+msgid "Cannot open decoder"
+msgstr ""
+
+#: ../src/spek-pipeline.cc:279
+msgid "Unsupported sample format"
+msgstr ""
+
+#. TRANSLATORS: first %d is the stream number, second %d is the
+#. total number of streams, %s is the stream description.
+#: ../src/spek-pipeline.cc:293
+#, c-format
+msgid "Stream %d / %d: %s"
+msgstr ""
+
+#. TRANSLATORS: first %s is the error message, second %s is stream description.
+#: ../src/spek-pipeline.cc:300
+#, c-format
+msgid "%s: %s"
+msgstr ""
+
+#: ../src/spek-preferences-dialog.cc:60
+msgid "Preferences"
+msgstr ""
+
+#: ../src/spek-preferences-dialog.cc:65
+msgid "(system default)"
+msgstr ""
+
+#. TRANSLATORS: The name of a section in the Preferences dialog.
+#: ../src/spek-preferences-dialog.cc:72
+msgid "General"
+msgstr ""
+
+#: ../src/spek-preferences-dialog.cc:81
+msgid "Language:"
+msgstr ""
+
+#: ../src/spek-preferences-dialog.cc:97
+msgid "Check for &updates"
+msgstr ""
+
+#. inner_sizer->Add(check_update, 0, wxLEFT | wxTOP, 12);
+#. check_update->SetValue(SpekPreferences::get().get_check_update());
+#: ../src/spek-preferences-dialog.cc:104
+msgid "Show &filename only"
+msgstr ""
+
+#: ../src/spek-preferences-dialog.cc:108
+msgid "Show detailed &description"
+msgstr ""
+
+#: ../src/spek-spectrogram.cc:326
+#, c-format
+msgid "%d kHz"
+msgstr ""
+
+#: ../src/spek-spectrogram.cc:331
+#, c-format
+msgid "%d dB"
+msgstr ""
+
+#. TRANSLATORS: keep "00" unchanged, it's used to calc the text width
+#: ../src/spek-spectrogram.cc:447
+msgid "00 kHz"
+msgstr ""
+
+#. TRANSLATORS: keep "-00" unchanged, it's used to calc the text width
+#: ../src/spek-spectrogram.cc:478
+msgid "-00 dB"
+msgstr ""
+
+#: ../src/spek-window.cc:103
+msgid "Spek - Acoustic Spectrum Analyser"
+msgstr ""
+
+#: ../src/spek-window.cc:134
+msgid "Export &Image..."
+msgstr ""
+
+#: ../src/spek-window.cc:138
+msgid "Recent &Files"
+msgstr ""
+
+#: ../src/spek-window.cc:141
+msgid "&File"
+msgstr ""
+
+#: ../src/spek-window.cc:147
+msgid "&Edit"
+msgstr ""
+
+#: ../src/spek-window.cc:151
+msgid "Show &Audio Info"
+msgstr ""
+
+#: ../src/spek-window.cc:156
+msgid "Show &Queue"
+msgstr ""
+
+#: ../src/spek-window.cc:160
+msgid "&Compare Mode"
+msgstr ""
+
+#: ../src/spek-window.cc:166
+msgid "512"
+msgstr ""
+
+#: ../src/spek-window.cc:167
+msgid "1024"
+msgstr ""
+
+#: ../src/spek-window.cc:168
+msgid "2048"
+msgstr ""
+
+#: ../src/spek-window.cc:169
+msgid "4096"
+msgstr ""
+
+#: ../src/spek-window.cc:170
+msgid "FFT &Size"
+msgstr ""
+
+#: ../src/spek-window.cc:173
+msgid "&Hann"
+msgstr ""
+
+#: ../src/spek-window.cc:174
+msgid "&Hamming"
+msgstr ""
+
+#: ../src/spek-window.cc:175
+msgid "&Blackman"
+msgstr ""
+
+#: ../src/spek-window.cc:176
+msgid "&Rectangular"
+msgstr ""
+
+#: ../src/spek-window.cc:177
+msgid "&Window Function"
+msgstr ""
+
+#: ../src/spek-window.cc:182
+msgid "&View"
+msgstr ""
+
+#: ../src/spek-window.cc:186 ../src/spek-window.cc:191
+msgid "&Help"
+msgstr ""
+
+#: ../src/spek-window.cc:213
+msgid "Show two spectrograms side-by-side"
+msgstr ""
+
+#: ../src/spek-window.cc:219
+msgid "Open a file in the secondary panel"
+msgstr ""
+
+#: ../src/spek-window.cc:226
+msgid "Help"
+msgstr ""
+
+#: ../src/spek-window.cc:232
+msgid "Spectrum"
+msgstr ""
+
+#: ../src/spek-window.cc:233
+msgid "SoX"
+msgstr ""
+
+#: ../src/spek-window.cc:234
+msgid "Green"
+msgstr ""
+
+#: ../src/spek-window.cc:235
+msgid "Rainbow"
+msgstr ""
+
+#: ../src/spek-window.cc:236
+msgid "Teal"
+msgstr ""
+
+#: ../src/spek-window.cc:237
+msgid "Heat"
+msgstr ""
+
+#: ../src/spek-window.cc:238
+msgid "Ice"
+msgstr ""
+
+#: ../src/spek-window.cc:239
+msgid "Grayscale"
+msgstr ""
+
+#: ../src/spek-window.cc:263
+msgid "A new version of Spek is available, click to download."
+msgstr ""
+
+#: ../src/spek-window.cc:278
+msgid "&Queue"
+msgstr ""
+
+#: ../src/spek-window.cc:291
+msgid "&Remove"
+msgstr ""
+
+#: ../src/spek-window.cc:292
+msgid "&Clear"
+msgstr ""
+
+#. TRANSLATORS: window title, %s is replaced with the file name
+#: ../src/spek-window.cc:369
+#, c-format
+msgid "Spek - %s"
+msgstr ""
+
+#: ../src/spek-window.cc:577
+msgid "All files"
+msgstr ""
+
+#: ../src/spek-window.cc:579
+msgid "Audio files"
+msgstr ""
+
+#: ../src/spek-window.cc:603
+msgid "No Recent Files"
+msgstr ""
+
+#: ../src/spek-window.cc:610
+msgid "Clear Recent Files"
+msgstr ""
+
+#: ../src/spek-window.cc:636
+msgid "Open File"
+msgstr ""
+
+#: ../src/spek-window.cc:662
+msgid "Open Comparison File"
+msgstr ""
+
+#: ../src/spek-window.cc:681
+msgid "Untitled.png"
+msgstr ""
+
+#: ../src/spek-window.cc:716
+#, c-format
+msgid "Failed to save image to %s"
+msgstr ""
+
+#: ../src/spek-window.cc:717
+msgid "Export Error"
+msgstr ""
+
+#. TRANSLATORS: Add your name here
+#: ../src/spek-window.cc:762
+msgid "translator-credits"
+msgstr ""
+
+#: ../src/spek-window.cc:768
+msgid "Copyright (c) 2010-2013 Alexander Kojevnikov and contributors"
+msgstr ""
+
+#: ../src/spek-window.cc:773
+msgid "Spek Website"
+msgstr ""
+
+#: ../src/spek-window.cc:873
+msgid "Open in Secondary Panel"
+msgstr ""
+
+#. TRANSLATORS: the %s is the package version.
+#: ../src/spek.cc:106
+#, c-format
+msgid "Spek version %s"
+msgstr ""
+
+#: ../src/spek.cc:124
+#, c-format
+msgid "PNG \"%s\" is not writable"
+msgstr ""
+
+#: ../src/spek.cc:132
+#, c-format
+msgid "PNG \"%s\" is same as FILE \"%s\""
+msgstr ""

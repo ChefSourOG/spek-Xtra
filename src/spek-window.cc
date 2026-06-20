@@ -37,6 +37,9 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_QUEUE_REMOVE (wxID_HIGHEST + 91)
 #define ID_QUEUE_CLEAR (wxID_HIGHEST + 92)
 #define ID_VIEW_SHOW_QUEUE (wxID_HIGHEST + 100)
+#define ID_VIEW_COMPARE_MODE (wxID_HIGHEST + 110)
+#define ID_OPEN_SECONDARY (wxID_HIGHEST + 111)
+#define ID_QUEUE_OPEN_SECONDARY (wxID_HIGHEST + 93)
 #define MAX_RECENT_FILES 10
 #define MAX_QUEUE_FILES 100
 
@@ -51,12 +54,16 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(wxID_ABOUT, SpekWindow::on_about)
     EVT_MENU(ID_VIEW_SHOW_INFO_PANEL, SpekWindow::on_show_info_panel)
     EVT_MENU(ID_VIEW_SHOW_QUEUE, SpekWindow::on_show_queue)
+    EVT_MENU(ID_VIEW_COMPARE_MODE, SpekWindow::on_compare_mode)
+    EVT_TOOL(ID_VIEW_COMPARE_MODE, SpekWindow::on_compare_mode)
+    EVT_TOOL(ID_OPEN_SECONDARY, SpekWindow::on_open_secondary)
     EVT_MENU_RANGE(ID_FFT_SIZE_BASE, ID_FFT_SIZE_BASE + 3, SpekWindow::on_fft_size)
     EVT_MENU_RANGE(ID_WINDOW_FUNCTION_BASE, ID_WINDOW_FUNCTION_BASE + 3, SpekWindow::on_window_function)
     EVT_COMMAND(-1, SPEK_NOTIFY_EVENT, SpekWindow::on_notify)
     EVT_BUTTON(ID_QUEUE_REMOVE, SpekWindow::on_queue_remove)
     EVT_BUTTON(ID_QUEUE_CLEAR, SpekWindow::on_queue_clear)
     EVT_LISTBOX(ID_QUEUE_LIST, SpekWindow::on_queue_select)
+    EVT_MENU(ID_QUEUE_OPEN_SECONDARY, SpekWindow::on_queue_open_secondary)
 END_EVENT_TABLE()
 
 #ifdef SPEK_CHECK_VERSION
@@ -84,12 +91,13 @@ private:
 
 SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxString& pngpath) :
     wxFrame(NULL, -1, wxEmptyString, wxDefaultPosition, wxSize(width, height)),
-    spectrogram(NULL), info_panel(NULL), splitter(NULL), info_bar(NULL),
-    queue_panel(NULL), queue_list(NULL), queue_remove_btn(NULL),
-    queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
-    menu_view_info(NULL), menu_view_queue(NULL),
-    info_sash_position(width - 280), path(path), pngpath(pngpath),
-    cur_dir(wxEmptyString), description(wxEmptyString),
+    spectrogram(NULL), spectrogram2(NULL), info_panel(NULL), splitter(NULL),
+    compare_splitter(NULL), info_bar(NULL), queue_panel(NULL), queue_list(NULL),
+    queue_remove_btn(NULL), queue_clear_btn(NULL), menu_file_export(NULL),
+    menu_file_recent(NULL), menu_view_info(NULL), menu_view_queue(NULL),
+    menu_view_compare(NULL),
+    info_sash_position(width - 280), path(path), secondary_path(wxEmptyString),
+    pngpath(pngpath), cur_dir(wxEmptyString), description(wxEmptyString),
     active_queue_index(-1)
 {
     this->description = _("Spek - Acoustic Spectrum Analyser");
@@ -148,6 +156,10 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         menu_view, ID_VIEW_SHOW_QUEUE, _("Show &Queue"),
         wxEmptyString, wxITEM_CHECK);
     menu_view->Append(this->menu_view_queue);
+    this->menu_view_compare = new wxMenuItem(
+        menu_view, ID_VIEW_COMPARE_MODE, _("&Compare Mode"),
+        wxEmptyString, wxITEM_CHECK);
+    menu_view->Append(this->menu_view_compare);
     menu_view->AppendSeparator();
 
     wxMenu *menu_fft_size = new wxMenu();
@@ -192,6 +204,19 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         wxEmptyString,
         wxArtProvider::GetBitmap(ART_SAVE, wxART_TOOLBAR),
         menu_file_export->GetItemLabelText()
+    );
+    toolbar->AddCheckTool(
+        ID_VIEW_COMPARE_MODE,
+        wxEmptyString,
+        wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR),
+        wxNullBitmap,
+        _("Show two spectrograms side-by-side")
+    );
+    toolbar->AddTool(
+        ID_OPEN_SECONDARY,
+        wxEmptyString,
+        wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR),
+        _("Open a file in the secondary panel")
     );
     toolbar->AddStretchableSpace();
     toolbar->AddTool(
@@ -256,6 +281,10 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         this->queue_panel, ID_QUEUE_LIST,
         wxDefaultPosition, wxDefaultSize,
         0, NULL, wxLB_SINGLE);
+    this->queue_list->Connect(
+        wxEVT_CONTEXT_MENU,
+        wxContextMenuEventHandler(SpekWindow::on_queue_context_menu),
+        NULL, this);
     queue_sizer->Add(this->queue_list, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 4);
 
     wxBoxSizer *queue_btn_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -271,10 +300,19 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     }
 
     this->splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    this->spectrogram = new SpekSpectrogram(this->splitter);
+    this->compare_splitter = new wxSplitterWindow(this->splitter, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    this->compare_splitter->SetSashGravity(0.5);
+    this->spectrogram = new SpekSpectrogram(this->compare_splitter);
     this->spectrogram->set_fft_bits(initial_fft_bits);
     this->spectrogram->set_window_function((enum window_function)initial_window_function);
     this->spectrogram->set_palette((enum palette)initial_palette);
+    this->spectrogram2 = new SpekSpectrogram(this->compare_splitter);
+    this->spectrogram2->set_fft_bits(initial_fft_bits);
+    this->spectrogram2->set_window_function((enum window_function)initial_window_function);
+    this->spectrogram2->set_palette((enum palette)initial_palette);
+    this->spectrogram2->Hide();
+    this->compare_splitter->Initialize(this->spectrogram);
+    this->compare_splitter->SetMinimumPaneSize(100);
     this->info_panel = new SpekInfoPanel(this->splitter);
     this->splitter->SetMinimumPaneSize(260);
 
@@ -533,6 +571,25 @@ static const char *audio_extensions[] = {
     NULL
 };
 
+static wxString build_audio_filters()
+{
+    wxString filters;
+    filters.Alloc(1024);
+    filters += _("All files");
+    filters += "|*.*|";
+    filters += _("Audio files");
+    filters += "|";
+    for (int i = 0; audio_extensions[i]; ++i) {
+        if (i) {
+            filters += ";";
+        }
+        filters += "*.";
+        filters += wxString::FromAscii(audio_extensions[i]);
+    }
+    filters.Shrink();
+    return filters;
+}
+
 void SpekWindow::populate_recent_files_menu()
 {
     if (!this->menu_file_recent) {
@@ -572,24 +629,8 @@ void SpekWindow::on_clear_recent_files(wxCommandEvent&)
 
 void SpekWindow::on_open(wxCommandEvent&)
 {
-    static wxString filters = wxEmptyString;
+    static wxString filters = build_audio_filters();
     static int filter_index = 1;
-
-    if (filters.IsEmpty()) {
-        filters.Alloc(1024);
-        filters += _("All files");
-        filters += "|*.*|";
-        filters += _("Audio files");
-        filters += "|";
-        for (int i = 0; audio_extensions[i]; ++i) {
-            if (i) {
-                filters += ";";
-            }
-            filters += "*.";
-            filters += wxString::FromAscii(audio_extensions[i]);
-        }
-        filters.Shrink();
-    }
 
     wxFileDialog *dlg = new wxFileDialog(
         this,
@@ -607,6 +648,30 @@ void SpekWindow::on_open(wxCommandEvent&)
         wxArrayString paths;
         dlg->GetPaths(paths);
         add_files_to_queue(paths, true);
+    }
+
+    dlg->Destroy();
+}
+
+void SpekWindow::on_open_secondary(wxCommandEvent&)
+{
+    static wxString filters = build_audio_filters();
+    static int filter_index = 1;
+
+    wxFileDialog *dlg = new wxFileDialog(
+        this,
+        _("Open Comparison File"),
+        this->cur_dir,
+        wxEmptyString,
+        filters,
+        wxFD_OPEN | wxFD_FILE_MUST_EXIST
+    );
+    dlg->SetFilterIndex(filter_index);
+
+    if (dlg->ShowModal() == wxID_OK) {
+        this->cur_dir = dlg->GetDirectory();
+        filter_index = dlg->GetFilterIndex();
+        this->load_secondary_file(dlg->GetPath());
     }
 
     dlg->Destroy();
@@ -746,6 +811,80 @@ void SpekWindow::on_show_queue(wxCommandEvent& event)
     this->update_queue_visibility();
 }
 
+void SpekWindow::on_compare_mode(wxCommandEvent& event)
+{
+    this->set_compare_mode(event.IsChecked());
+}
+
+void SpekWindow::set_compare_mode(bool compare)
+{
+    if (this->menu_view_compare) {
+        this->menu_view_compare->Check(compare);
+    }
+    wxToolBar *toolbar = this->GetToolBar();
+    if (toolbar) {
+        toolbar->ToggleTool(ID_VIEW_COMPARE_MODE, compare);
+    }
+
+    if (!this->compare_splitter) {
+        return;
+    }
+
+    if (compare) {
+        if (!this->compare_splitter->IsSplit()) {
+            int sash = this->compare_splitter->GetClientSize().GetWidth() / 2;
+            if (sash < 100) {
+                sash = 100;
+            }
+            this->spectrogram2->Show();
+            this->compare_splitter->SplitVertically(this->spectrogram, this->spectrogram2, sash);
+        }
+    } else {
+        if (this->compare_splitter->IsSplit()) {
+            this->compare_splitter->Unsplit(this->spectrogram2);
+            this->spectrogram2->Hide();
+        }
+    }
+
+    this->update_info_panel_info();
+    this->Layout();
+}
+
+void SpekWindow::load_secondary_file(const wxString& path)
+{
+    wxFileName file_name(path);
+    if (file_name.FileExists()) {
+        file_name.Normalize(wxPATH_NORM_ABSOLUTE);
+        wxString absolute_path = file_name.GetFullPath();
+        this->secondary_path = absolute_path;
+        this->spectrogram2->open(absolute_path, wxEmptyString);
+        this->update_info_panel_info();
+
+        if (!this->menu_view_compare->IsChecked()) {
+            this->set_compare_mode(true);
+        }
+    }
+}
+
+void SpekWindow::on_queue_context_menu(wxContextMenuEvent&)
+{
+    if (this->queue_list->GetSelection() == wxNOT_FOUND) {
+        return;
+    }
+
+    wxMenu menu;
+    menu.Append(ID_QUEUE_OPEN_SECONDARY, _("Open in Secondary Panel"));
+    this->PopupMenu(&menu);
+}
+
+void SpekWindow::on_queue_open_secondary(wxCommandEvent&)
+{
+    int index = this->queue_list->GetSelection();
+    if (index != wxNOT_FOUND) {
+        this->load_secondary_file(this->queue_paths[index]);
+    }
+}
+
 void SpekWindow::update_info_panel_visibility()
 {
     bool show = SpekPreferences::get().get_show_info_panel();
@@ -766,7 +905,7 @@ void SpekWindow::update_info_panel_visibility()
             } else if (sash > max_sash) {
                 sash = max_sash;
             }
-            this->splitter->SplitVertically(this->spectrogram, this->info_panel, sash);
+            this->splitter->SplitVertically(this->compare_splitter, this->info_panel, sash);
         }
     } else {
         if (this->splitter->IsSplit()) {
@@ -794,6 +933,9 @@ void SpekWindow::on_fft_size(wxCommandEvent& event)
     int bits = 9 + (event.GetId() - ID_FFT_SIZE_BASE);
     SpekPreferences::get().set_fft_bits(bits);
     this->spectrogram->set_fft_bits(bits);
+    if (this->spectrogram2) {
+        this->spectrogram2->set_fft_bits(bits);
+    }
     this->update_info_panel_info();
 }
 
@@ -802,6 +944,9 @@ void SpekWindow::on_window_function(wxCommandEvent& event)
     enum window_function f = (enum window_function)(event.GetId() - ID_WINDOW_FUNCTION_BASE);
     SpekPreferences::get().set_window_function(f);
     this->spectrogram->set_window_function(f);
+    if (this->spectrogram2) {
+        this->spectrogram2->set_window_function(f);
+    }
 }
 
 void SpekWindow::on_palette(wxCommandEvent& event)
@@ -809,6 +954,9 @@ void SpekWindow::on_palette(wxCommandEvent& event)
     enum palette p = (enum palette)(event.GetId() - ID_PALETTE_BASE);
     SpekPreferences::get().set_palette(p);
     this->spectrogram->set_palette(p);
+    if (this->spectrogram2) {
+        this->spectrogram2->set_palette(p);
+    }
 }
 
 void SpekWindow::on_queue_select(wxCommandEvent&)
@@ -838,6 +986,15 @@ void SpekWindow::update_info_panel_info()
         SpekAudioInfo info;
         this->spectrogram->get_info(info);
         this->info_panel->set_info(info);
+
+        if (this->menu_view_compare && this->menu_view_compare->IsChecked() &&
+            this->spectrogram2 && !this->secondary_path.IsEmpty()) {
+            SpekAudioInfo info2;
+            this->spectrogram2->get_info(info2);
+            this->info_panel->set_secondary_info(info2);
+        } else {
+            this->info_panel->clear_secondary();
+        }
     }
 }
 

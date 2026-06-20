@@ -26,6 +26,8 @@ private:
     void on_close(wxCommandEvent& event);
     void on_show_info_panel(wxCommandEvent& event);
     void on_show_queue(wxCommandEvent& event);
+    void on_compare_mode(wxCommandEvent& event);
+    void on_open_secondary(wxCommandEvent& event);
     void on_fft_size(wxCommandEvent& event);
     void on_window_function(wxCommandEvent& event);
     void on_palette(wxCommandEvent& event);
@@ -34,11 +36,15 @@ private:
     void on_queue_select(wxCommandEvent& event);
     void on_queue_remove(wxCommandEvent& event);
     void on_queue_clear(wxCommandEvent& event);
+    void on_queue_context_menu(wxContextMenuEvent& event);
+    void on_queue_open_secondary(wxCommandEvent& event);
     void populate_recent_files_menu();
     void update_info_panel_visibility();
     void update_info_panel_info();
     void update_queue_visibility();
     void load_file(const wxString& path);
+    void load_secondary_file(const wxString& path);
+    void set_compare_mode(bool compare);
     void load_queue_item(int index);
     void refresh_queue_list();
     void save_queue();
@@ -46,8 +52,10 @@ private:
     void clear_queue();
 
     SpekSpectrogram *spectrogram;
+    SpekSpectrogram *spectrogram2;
     SpekInfoPanel *info_panel;
     wxSplitterWindow *splitter;
+    wxSplitterWindow *compare_splitter;
     wxPanel *info_bar;
     wxPanel *queue_panel;
     wxListBox *queue_list;
@@ -57,8 +65,10 @@ private:
     wxMenu *menu_file_recent;
     wxMenuItem *menu_view_info;
     wxMenuItem *menu_view_queue;
+    wxMenuItem *menu_view_compare;
     int info_sash_position;
     wxString path;
+    wxString secondary_path;
     wxString pngpath;
     wxString cur_dir;
     wxString description;
