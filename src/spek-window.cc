@@ -1,10 +1,13 @@
 #include <wx/aboutdlg.h>
 #include <wx/artprov.h>
+#include <wx/button.h>
 #include <wx/dnd.h>
 #include <wx/filename.h>
+#include <wx/listbox.h>
 #include <wx/protocol/http.h>
 #include <wx/splitter.h>
 #include <wx/sstream.h>
+#include <wx/stattext.h>
 
 // WX on WIN doesn't like it when pthread.h is included first.
 #include <pthread.h>
@@ -30,7 +33,12 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_EXPORT_IMAGE (wxID_HIGHEST + 60)
 #define ID_RECENT_FILES_BASE (wxID_HIGHEST + 70)
 #define ID_CLEAR_RECENT_FILES (wxID_HIGHEST + 80)
+#define ID_QUEUE_LIST (wxID_HIGHEST + 90)
+#define ID_QUEUE_REMOVE (wxID_HIGHEST + 91)
+#define ID_QUEUE_CLEAR (wxID_HIGHEST + 92)
+#define ID_VIEW_SHOW_QUEUE (wxID_HIGHEST + 100)
 #define MAX_RECENT_FILES 10
+#define MAX_QUEUE_FILES 100
 
 BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(wxID_OPEN, SpekWindow::on_open)
@@ -42,9 +50,13 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(wxID_HELP, SpekWindow::on_help)
     EVT_MENU(wxID_ABOUT, SpekWindow::on_about)
     EVT_MENU(ID_VIEW_SHOW_INFO_PANEL, SpekWindow::on_show_info_panel)
+    EVT_MENU(ID_VIEW_SHOW_QUEUE, SpekWindow::on_show_queue)
     EVT_MENU_RANGE(ID_FFT_SIZE_BASE, ID_FFT_SIZE_BASE + 3, SpekWindow::on_fft_size)
     EVT_MENU_RANGE(ID_WINDOW_FUNCTION_BASE, ID_WINDOW_FUNCTION_BASE + 3, SpekWindow::on_window_function)
     EVT_COMMAND(-1, SPEK_NOTIFY_EVENT, SpekWindow::on_notify)
+    EVT_BUTTON(ID_QUEUE_REMOVE, SpekWindow::on_queue_remove)
+    EVT_BUTTON(ID_QUEUE_CLEAR, SpekWindow::on_queue_clear)
+    EVT_LISTBOX(ID_QUEUE_LIST, SpekWindow::on_queue_select)
 END_EVENT_TABLE()
 
 #ifdef SPEK_CHECK_VERSION
@@ -59,8 +71,8 @@ public:
 
 protected:
     virtual bool OnDropFiles(wxCoord, wxCoord, const wxArrayString& filenames){
-        if (filenames.GetCount() == 1) {
-            window->open(filenames[0]);
+        if (filenames.GetCount() > 0) {
+            window->add_files_to_queue(filenames, true);
             return true;
         }
         return false;
@@ -72,7 +84,13 @@ private:
 
 SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxString& pngpath) :
     wxFrame(NULL, -1, wxEmptyString, wxDefaultPosition, wxSize(width, height)),
-    menu_file_recent(NULL), menu_view_info(NULL), info_sash_position(width - 280), path(path), pngpath(pngpath)
+    spectrogram(NULL), info_panel(NULL), splitter(NULL), info_bar(NULL),
+    queue_panel(NULL), queue_list(NULL), queue_remove_btn(NULL),
+    queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
+    menu_view_info(NULL), menu_view_queue(NULL),
+    info_sash_position(width - 280), path(path), pngpath(pngpath),
+    cur_dir(wxEmptyString), description(wxEmptyString),
+    active_queue_index(-1)
 {
     this->description = _("Spek - Acoustic Spectrum Analyser");
     SetTitle(this->description);
@@ -97,6 +115,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     if (initial_palette < 0 || initial_palette >= PALETTE_COUNT) {
         initial_palette = PALETTE_DEFAULT;
     }
+
+    bool initial_show_queue = SpekPreferences::get().get_show_queue();
 
     wxMenuBar *menu = new wxMenuBar();
 
@@ -124,6 +144,10 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         wxEmptyString, wxITEM_CHECK);
     this->menu_view_info->SetItemLabel(this->menu_view_info->GetItemLabelText() + "\tCtrl-I");
     menu_view->Append(this->menu_view_info);
+    this->menu_view_queue = new wxMenuItem(
+        menu_view, ID_VIEW_SHOW_QUEUE, _("Show &Queue"),
+        wxEmptyString, wxITEM_CHECK);
+    menu_view->Append(this->menu_view_queue);
     menu_view->AppendSeparator();
 
     wxMenu *menu_fft_size = new wxMenu();
@@ -204,29 +228,47 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     }
     palette_sizer->AddStretchSpacer(1);
 
-    wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
-
     // wxInfoBar is too limited, construct a custom one.
-    wxPanel *info_bar = new wxPanel(this);
-    info_bar->Hide();
-    info_bar->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
-    info_bar->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
+    this->info_bar = new wxPanel(this);
+    this->info_bar->Hide();
+    this->info_bar->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
+    this->info_bar->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
     wxSizer *info_sizer = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText *label = new wxStaticText(
-        info_bar, -1, _("A new version of Spek is available, click to download."));
+        this->info_bar, -1, _("A new version of Spek is available, click to download."));
     label->SetCursor(*new wxCursor(wxCURSOR_HAND));
     label->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(SpekWindow::on_visit));
     // This second Connect() handles clicks on the border
-    info_bar->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(SpekWindow::on_visit));
+    this->info_bar->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(SpekWindow::on_visit));
     info_sizer->Add(label, 1, wxALIGN_CENTER_VERTICAL | wxALL, 6);
     wxBitmapButton *button = new wxBitmapButton(
-        info_bar, -1, wxArtProvider::GetBitmap(ART_CLOSE, wxART_BUTTON),
+        this->info_bar, -1, wxArtProvider::GetBitmap(ART_CLOSE, wxART_BUTTON),
         wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
     button->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SpekWindow::on_close));
     info_sizer->Add(button, 0, wxALIGN_CENTER_VERTICAL);
-    info_bar->SetSizer(info_sizer);
-    sizer->Add(info_bar, 0, wxEXPAND);
-    sizer->Add(palette_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 4);
+    this->info_bar->SetSizer(info_sizer);
+
+    this->queue_panel = new wxPanel(this);
+    wxBoxSizer *queue_sizer = new wxBoxSizer(wxVERTICAL);
+    wxStaticText *queue_label = new wxStaticText(this->queue_panel, -1, _("&Queue"));
+    queue_sizer->Add(queue_label, 0, wxALL, 4);
+    this->queue_list = new wxListBox(
+        this->queue_panel, ID_QUEUE_LIST,
+        wxDefaultPosition, wxDefaultSize,
+        0, NULL, wxLB_SINGLE);
+    queue_sizer->Add(this->queue_list, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 4);
+
+    wxBoxSizer *queue_btn_sizer = new wxBoxSizer(wxHORIZONTAL);
+    this->queue_remove_btn = new wxButton(this->queue_panel, ID_QUEUE_REMOVE, _("&Remove"));
+    this->queue_clear_btn = new wxButton(this->queue_panel, ID_QUEUE_CLEAR, _("&Clear"));
+    queue_btn_sizer->Add(this->queue_remove_btn, 1, wxEXPAND | wxRIGHT, 2);
+    queue_btn_sizer->Add(this->queue_clear_btn, 1, wxEXPAND | wxLEFT, 2);
+    queue_sizer->Add(queue_btn_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 4);
+    this->queue_panel->SetSizer(queue_sizer);
+    this->queue_panel->SetMinSize(wxSize(180, -1));
+    if (!initial_show_queue) {
+        this->queue_panel->Hide();
+    }
 
     this->splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     this->spectrogram = new SpekSpectrogram(this->splitter);
@@ -235,16 +277,28 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     this->spectrogram->set_palette((enum palette)initial_palette);
     this->info_panel = new SpekInfoPanel(this->splitter);
     this->splitter->SetMinimumPaneSize(260);
-    sizer->Add(this->splitter, 1, wxEXPAND);
 
-    SetSizer(sizer);
+    wxBoxSizer *right_sizer = new wxBoxSizer(wxVERTICAL);
+    right_sizer->Add(this->info_bar, 0, wxEXPAND);
+    right_sizer->Add(palette_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 4);
+    right_sizer->Add(this->splitter, 1, wxEXPAND);
+
+    wxBoxSizer *main_sizer = new wxBoxSizer(wxHORIZONTAL);
+    main_sizer->Add(this->queue_panel, 0, wxEXPAND | wxALL, 4);
+    main_sizer->Add(right_sizer, 1, wxEXPAND);
+
+    SetSizer(main_sizer);
 
     this->update_info_panel_visibility();
+    this->update_queue_visibility();
 
     this->cur_dir = wxGetHomeDir();
 
     this->recent_files = SpekPreferences::get().get_recent_files();
     this->populate_recent_files_menu();
+
+    this->queue_paths = SpekPreferences::get().get_queue();
+    this->refresh_queue_list();
 
     if (!path.IsEmpty()) {
         open(path);
@@ -260,6 +314,13 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
 }
 
 void SpekWindow::open(const wxString& path)
+{
+    wxArrayString paths;
+    paths.Add(path);
+    add_files_to_queue(paths, true);
+}
+
+void SpekWindow::load_file(const wxString& path)
 {
     wxFileName file_name(path);
     if (file_name.FileExists()) {
@@ -282,6 +343,156 @@ void SpekWindow::open(const wxString& path)
         SpekPreferences::get().add_recent_file(absolute_path);
         this->recent_files = SpekPreferences::get().get_recent_files();
         this->populate_recent_files_menu();
+    }
+}
+
+void SpekWindow::add_files_to_queue(const wxArrayString& paths, bool load_first)
+{
+    wxArrayString added;
+    for (size_t i = 0; i < paths.GetCount(); ++i) {
+        wxFileName file_name(paths[i]);
+        if (!file_name.FileExists()) {
+            continue;
+        }
+        file_name.Normalize(wxPATH_NORM_ABSOLUTE);
+        wxString absolute_path = file_name.GetFullPath();
+
+        int index = this->queue_paths.Index(absolute_path);
+        if (index != wxNOT_FOUND) {
+            this->queue_paths.RemoveAt(index);
+        }
+        this->queue_paths.Add(absolute_path);
+        added.Add(absolute_path);
+    }
+
+    while ((int)this->queue_paths.GetCount() > MAX_QUEUE_FILES) {
+        this->queue_paths.RemoveAt(0);
+    }
+
+    if (this->queue_paths.IsEmpty()) {
+        this->active_queue_index = -1;
+    }
+
+    // Remove any duplicates created by re-adding existing files.
+    for (size_t i = 0; i < this->queue_paths.GetCount(); ++i) {
+        for (size_t j = i + 1; j < this->queue_paths.GetCount(); ) {
+            if (this->queue_paths[i] == this->queue_paths[j]) {
+                this->queue_paths.RemoveAt(j);
+            } else {
+                ++j;
+            }
+        }
+    }
+
+    this->refresh_queue_list();
+    this->save_queue();
+
+    if (load_first && !added.IsEmpty()) {
+        int index = this->queue_paths.Index(added[0]);
+        if (index != wxNOT_FOUND) {
+            this->load_queue_item(index);
+        }
+    }
+}
+
+void SpekWindow::load_queue_item(int index)
+{
+    if (index < 0 || index >= (int)this->queue_paths.GetCount()) {
+        return;
+    }
+    this->active_queue_index = index;
+    if (this->queue_list) {
+        this->queue_list->SetSelection(index);
+    }
+    this->load_file(this->queue_paths[index]);
+}
+
+void SpekWindow::refresh_queue_list()
+{
+    if (!this->queue_list) {
+        return;
+    }
+
+    this->queue_list->Freeze();
+    this->queue_list->Clear();
+    for (size_t i = 0; i < this->queue_paths.GetCount(); ++i) {
+        wxFileName file_name(this->queue_paths[i]);
+        this->queue_list->Append(file_name.GetFullName());
+    }
+
+    if (this->active_queue_index >= 0 && this->active_queue_index < (int)this->queue_paths.GetCount()) {
+        this->queue_list->SetSelection(this->active_queue_index);
+    } else {
+        this->active_queue_index = -1;
+    }
+    this->queue_list->Thaw();
+
+    if (this->queue_remove_btn) {
+        this->queue_remove_btn->Enable(this->queue_list->GetSelection() != wxNOT_FOUND);
+    }
+    if (this->queue_clear_btn) {
+        this->queue_clear_btn->Enable(!this->queue_paths.IsEmpty());
+    }
+}
+
+void SpekWindow::save_queue()
+{
+    SpekPreferences::get().set_queue(this->queue_paths);
+}
+
+void SpekWindow::remove_queue_item(int index)
+{
+    if (index < 0 || index >= (int)this->queue_paths.GetCount()) {
+        return;
+    }
+
+    bool was_active = (index == this->active_queue_index);
+    this->queue_paths.RemoveAt(index);
+
+    if (was_active) {
+        if (index < (int)this->queue_paths.GetCount()) {
+            this->active_queue_index = index;
+        } else if (!this->queue_paths.IsEmpty()) {
+            this->active_queue_index = (int)this->queue_paths.GetCount() - 1;
+        } else {
+            this->active_queue_index = -1;
+        }
+        if (this->active_queue_index >= 0) {
+            this->load_queue_item(this->active_queue_index);
+        }
+    } else if (this->active_queue_index > index) {
+        this->active_queue_index--;
+    }
+
+    this->refresh_queue_list();
+    this->save_queue();
+
+    if (this->queue_paths.IsEmpty()) {
+        this->path.Empty();
+        SetTitle(this->description);
+        if (this->menu_file_export) {
+            this->menu_file_export->Enable(false);
+        }
+        if (this->spectrogram) {
+            this->spectrogram->open(wxEmptyString, wxEmptyString);
+        }
+    }
+}
+
+void SpekWindow::clear_queue()
+{
+    this->queue_paths.Clear();
+    this->active_queue_index = -1;
+    this->refresh_queue_list();
+    this->save_queue();
+
+    this->path.Empty();
+    SetTitle(this->description);
+    if (this->menu_file_export) {
+        this->menu_file_export->Enable(false);
+    }
+    if (this->spectrogram) {
+        this->spectrogram->open(wxEmptyString, wxEmptyString);
     }
 }
 
@@ -386,14 +597,16 @@ void SpekWindow::on_open(wxCommandEvent&)
         this->cur_dir,
         wxEmptyString,
         filters,
-        wxFD_OPEN
+        wxFD_OPEN | wxFD_MULTIPLE
     );
     dlg->SetFilterIndex(filter_index);
 
     if (dlg->ShowModal() == wxID_OK) {
         this->cur_dir = dlg->GetDirectory();
         filter_index = dlg->GetFilterIndex();
-        open(dlg->GetPath());
+        wxArrayString paths;
+        dlg->GetPaths(paths);
+        add_files_to_queue(paths, true);
     }
 
     dlg->Destroy();
@@ -502,8 +715,10 @@ void SpekWindow::on_about(wxCommandEvent&)
 
 void SpekWindow::on_notify(wxCommandEvent&)
 {
-    this->GetSizer()->Show((size_t)0);
-    this->Layout();
+    if (this->info_bar) {
+        this->info_bar->Show();
+        this->Layout();
+    }
 }
 
 void SpekWindow::on_visit(wxCommandEvent&)
@@ -511,17 +726,24 @@ void SpekWindow::on_visit(wxCommandEvent&)
     wxLaunchDefaultBrowser("https://github.com/MikeWang000000/spek-X/releases");
 }
 
-void SpekWindow::on_close(wxCommandEvent& event)
+void SpekWindow::on_close(wxCommandEvent&)
 {
-    wxWindow *self = ((wxWindow *)event.GetEventObject())->GetGrandParent();
-    self->GetSizer()->Hide((size_t)0);
-    self->Layout();
+    if (this->info_bar) {
+        this->info_bar->Hide();
+        this->Layout();
+    }
 }
 
 void SpekWindow::on_show_info_panel(wxCommandEvent& event)
 {
     SpekPreferences::get().set_show_info_panel(event.IsChecked());
     this->update_info_panel_visibility();
+}
+
+void SpekWindow::on_show_queue(wxCommandEvent& event)
+{
+    SpekPreferences::get().set_show_queue(event.IsChecked());
+    this->update_queue_visibility();
 }
 
 void SpekWindow::update_info_panel_visibility()
@@ -554,6 +776,19 @@ void SpekWindow::update_info_panel_visibility()
     }
 }
 
+void SpekWindow::update_queue_visibility()
+{
+    bool show = SpekPreferences::get().get_show_queue();
+    if (this->menu_view_queue) {
+        this->menu_view_queue->Check(show);
+    }
+
+    if (this->queue_panel) {
+        this->queue_panel->Show(show);
+        this->Layout();
+    }
+}
+
 void SpekWindow::on_fft_size(wxCommandEvent& event)
 {
     int bits = 9 + (event.GetId() - ID_FFT_SIZE_BASE);
@@ -574,6 +809,27 @@ void SpekWindow::on_palette(wxCommandEvent& event)
     enum palette p = (enum palette)(event.GetId() - ID_PALETTE_BASE);
     SpekPreferences::get().set_palette(p);
     this->spectrogram->set_palette(p);
+}
+
+void SpekWindow::on_queue_select(wxCommandEvent&)
+{
+    int index = this->queue_list->GetSelection();
+    if (index != wxNOT_FOUND) {
+        this->load_queue_item(index);
+    }
+}
+
+void SpekWindow::on_queue_remove(wxCommandEvent&)
+{
+    int index = this->queue_list->GetSelection();
+    if (index != wxNOT_FOUND) {
+        this->remove_queue_item(index);
+    }
+}
+
+void SpekWindow::on_queue_clear(wxCommandEvent&)
+{
+    this->clear_queue();
 }
 
 void SpekWindow::update_info_panel_info()

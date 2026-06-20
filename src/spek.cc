@@ -167,8 +167,8 @@ int Spek::OnRun()
 #ifdef OS_OSX
 void Spek::MacOpenFiles(const wxArrayString& files)
 {
-    if (!this->cmdcall && files.GetCount() == 1) {
-        this->window->open(files[0]);
+    if (!this->cmdcall && files.GetCount() > 0) {
+        this->window->add_files_to_queue(files, true);
     }
 }
 #endif

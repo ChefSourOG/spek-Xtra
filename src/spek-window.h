@@ -12,6 +12,7 @@ class SpekWindow : public wxFrame
 public:
     SpekWindow(int width, int height, const wxString& path, const wxString& pngpath);
     void open(const wxString& path);
+    void add_files_to_queue(const wxArrayString& paths, bool load_first);
 
 private:
     void on_open(wxCommandEvent& event);
@@ -24,27 +25,46 @@ private:
     void on_visit(wxCommandEvent& event);
     void on_close(wxCommandEvent& event);
     void on_show_info_panel(wxCommandEvent& event);
+    void on_show_queue(wxCommandEvent& event);
     void on_fft_size(wxCommandEvent& event);
     void on_window_function(wxCommandEvent& event);
     void on_palette(wxCommandEvent& event);
     void on_recent_file(wxCommandEvent& event);
     void on_clear_recent_files(wxCommandEvent& event);
+    void on_queue_select(wxCommandEvent& event);
+    void on_queue_remove(wxCommandEvent& event);
+    void on_queue_clear(wxCommandEvent& event);
     void populate_recent_files_menu();
     void update_info_panel_visibility();
     void update_info_panel_info();
+    void update_queue_visibility();
+    void load_file(const wxString& path);
+    void load_queue_item(int index);
+    void refresh_queue_list();
+    void save_queue();
+    void remove_queue_item(int index);
+    void clear_queue();
 
     SpekSpectrogram *spectrogram;
     SpekInfoPanel *info_panel;
     wxSplitterWindow *splitter;
+    wxPanel *info_bar;
+    wxPanel *queue_panel;
+    wxListBox *queue_list;
+    wxButton *queue_remove_btn;
+    wxButton *queue_clear_btn;
     wxMenuItem *menu_file_export;
     wxMenu *menu_file_recent;
     wxMenuItem *menu_view_info;
+    wxMenuItem *menu_view_queue;
     int info_sash_position;
     wxString path;
     wxString pngpath;
     wxString cur_dir;
     wxString description;
     wxArrayString recent_files;
+    wxArrayString queue_paths;
+    int active_queue_index;
 
     DECLARE_EVENT_TABLE()
 };

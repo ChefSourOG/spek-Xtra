@@ -33,6 +33,11 @@ public:
     wxArrayString get_recent_files();
     void add_recent_file(const wxString& value);
     void clear_recent_files();
+    wxArrayString get_queue();
+    void set_queue(const wxArrayString& value);
+    void clear_queue();
+    bool get_show_queue();
+    void set_show_queue(bool value);
 
 private:
     SpekPreferences();

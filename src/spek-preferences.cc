@@ -225,3 +225,47 @@ void SpekPreferences::clear_recent_files()
     }
     this->config->Flush();
 }
+
+wxArrayString SpekPreferences::get_queue()
+{
+    wxArrayString result;
+    for (int i = 0; i < 100; ++i) {
+        wxString value;
+        if (this->config->Read(wxString::Format("/queue/file%d", i), &value) && !value.IsEmpty()) {
+            result.Add(value);
+        }
+    }
+    return result;
+}
+
+void SpekPreferences::set_queue(const wxArrayString& value)
+{
+    for (size_t i = 0; i < value.GetCount() && i < 100; ++i) {
+        this->config->Write(wxString::Format("/queue/file%d", (int)i), value[i]);
+    }
+    for (size_t i = value.GetCount(); i < 100; ++i) {
+        this->config->DeleteEntry(wxString::Format("/queue/file%d", (int)i), false);
+    }
+    this->config->Flush();
+}
+
+void SpekPreferences::clear_queue()
+{
+    for (int i = 0; i < 100; ++i) {
+        this->config->DeleteEntry(wxString::Format("/queue/file%d", i), false);
+    }
+    this->config->Flush();
+}
+
+bool SpekPreferences::get_show_queue()
+{
+    bool result = true;
+    this->config->Read("/general/showqueue", &result);
+    return result;
+}
+
+void SpekPreferences::set_show_queue(bool value)
+{
+    this->config->Write("/general/showqueue", value);
+    this->config->Flush();
+}
