@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wx/arrstr.h>
 #include <wx/wx.h>
 #include <wx/splitter.h>
 
@@ -26,6 +27,9 @@ private:
     void on_fft_size(wxCommandEvent& event);
     void on_window_function(wxCommandEvent& event);
     void on_palette(wxCommandEvent& event);
+    void on_recent_file(wxCommandEvent& event);
+    void on_clear_recent_files(wxCommandEvent& event);
+    void populate_recent_files_menu();
     void update_info_panel_visibility();
     void update_info_panel_info();
 
@@ -33,12 +37,14 @@ private:
     SpekInfoPanel *info_panel;
     wxSplitterWindow *splitter;
     wxMenuItem *menu_file_export;
+    wxMenu *menu_file_recent;
     wxMenuItem *menu_view_info;
     int info_sash_position;
     wxString path;
     wxString pngpath;
     wxString cur_dir;
     wxString description;
+    wxArrayString recent_files;
 
     DECLARE_EVENT_TABLE()
 };

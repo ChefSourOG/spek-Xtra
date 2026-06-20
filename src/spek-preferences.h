@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wx/arrstr.h>
 #include <wx/fileconf.h>
 #include <wx/intl.h>
 
@@ -29,6 +30,9 @@ public:
     void set_palette(int value);
     int get_window_width();
     int get_window_height();
+    wxArrayString get_recent_files();
+    void add_recent_file(const wxString& value);
+    void clear_recent_files();
 
 private:
     SpekPreferences();

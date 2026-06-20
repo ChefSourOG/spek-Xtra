@@ -28,10 +28,15 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_WINDOW_FUNCTION_BASE (wxID_HIGHEST + 30)
 #define ID_PALETTE_BASE (wxID_HIGHEST + 40)
 #define ID_EXPORT_IMAGE (wxID_HIGHEST + 60)
+#define ID_RECENT_FILES_BASE (wxID_HIGHEST + 70)
+#define ID_CLEAR_RECENT_FILES (wxID_HIGHEST + 80)
+#define MAX_RECENT_FILES 10
 
 BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(wxID_OPEN, SpekWindow::on_open)
     EVT_MENU(ID_EXPORT_IMAGE, SpekWindow::on_export)
+    EVT_MENU_RANGE(ID_RECENT_FILES_BASE, ID_RECENT_FILES_BASE + MAX_RECENT_FILES - 1, SpekWindow::on_recent_file)
+    EVT_MENU(ID_CLEAR_RECENT_FILES, SpekWindow::on_clear_recent_files)
     EVT_MENU(wxID_EXIT, SpekWindow::on_exit)
     EVT_MENU(wxID_PREFERENCES, SpekWindow::on_preferences)
     EVT_MENU(wxID_HELP, SpekWindow::on_help)
@@ -67,7 +72,7 @@ private:
 
 SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxString& pngpath) :
     wxFrame(NULL, -1, wxEmptyString, wxDefaultPosition, wxSize(width, height)),
-    menu_view_info(NULL), info_sash_position(width - 280), path(path), pngpath(pngpath)
+    menu_file_recent(NULL), menu_view_info(NULL), info_sash_position(width - 280), path(path), pngpath(pngpath)
 {
     this->description = _("Spek - Acoustic Spectrum Analyser");
     SetTitle(this->description);
@@ -101,6 +106,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     this->menu_file_export = new wxMenuItem(menu_file, ID_EXPORT_IMAGE, _("Export &Image..."));
     this->menu_file_export->SetItemLabel(this->menu_file_export->GetItemLabelText() + "\tCtrl+S");
     menu_file->Append(this->menu_file_export);
+    this->menu_file_recent = new wxMenu();
+    menu_file->AppendSubMenu(this->menu_file_recent, _("Recent &Files"));
     menu_file->AppendSeparator();
     menu_file->Append(wxID_EXIT);
     menu->Append(menu_file, _("&File"));
@@ -236,6 +243,9 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
 
     this->cur_dir = wxGetHomeDir();
 
+    this->recent_files = SpekPreferences::get().get_recent_files();
+    this->populate_recent_files_menu();
+
     if (!path.IsEmpty()) {
         open(path);
     }
@@ -253,19 +263,25 @@ void SpekWindow::open(const wxString& path)
 {
     wxFileName file_name(path);
     if (file_name.FileExists()) {
-        this->path = path;
+        file_name.Normalize(wxPATH_NORM_ABSOLUTE);
+        wxString absolute_path = file_name.GetFullPath();
+        this->path = absolute_path;
         wxString full_name = file_name.GetFullName();
         // TRANSLATORS: window title, %s is replaced with the file name
         wxString title = wxString::Format(_("Spek - %s"), full_name.c_str());
         SetTitle(title);
 
-        this->spectrogram->open(path, this->pngpath);
+        this->spectrogram->open(absolute_path, this->pngpath);
 
         this->update_info_panel_info();
 
         if (this->menu_file_export) {
             this->menu_file_export->Enable(true);
         }
+
+        SpekPreferences::get().add_recent_file(absolute_path);
+        this->recent_files = SpekPreferences::get().get_recent_files();
+        this->populate_recent_files_menu();
     }
 }
 
@@ -305,6 +321,43 @@ static const char *audio_extensions[] = {
     "wv",
     NULL
 };
+
+void SpekWindow::populate_recent_files_menu()
+{
+    if (!this->menu_file_recent) {
+        return;
+    }
+
+    while (this->menu_file_recent->GetMenuItemCount() > 0) {
+        this->menu_file_recent->Destroy(this->menu_file_recent->FindItemByPosition(0));
+    }
+
+    if (this->recent_files.IsEmpty()) {
+        wxMenuItem *item = this->menu_file_recent->Append(-1, _("No Recent Files"));
+        item->Enable(false);
+    } else {
+        for (size_t i = 0; i < this->recent_files.GetCount(); ++i) {
+            this->menu_file_recent->Append(ID_RECENT_FILES_BASE + i, this->recent_files[i]);
+        }
+        this->menu_file_recent->AppendSeparator();
+        this->menu_file_recent->Append(ID_CLEAR_RECENT_FILES, _("Clear Recent Files"));
+    }
+}
+
+void SpekWindow::on_recent_file(wxCommandEvent& event)
+{
+    int index = event.GetId() - ID_RECENT_FILES_BASE;
+    if (index >= 0 && index < (int)this->recent_files.GetCount()) {
+        this->open(this->recent_files[index]);
+    }
+}
+
+void SpekWindow::on_clear_recent_files(wxCommandEvent&)
+{
+    SpekPreferences::get().clear_recent_files();
+    this->recent_files.Clear();
+    this->populate_recent_files_menu();
+}
 
 void SpekWindow::on_open(wxCommandEvent&)
 {

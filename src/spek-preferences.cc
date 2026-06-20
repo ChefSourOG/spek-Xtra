@@ -185,3 +185,43 @@ int SpekPreferences::get_window_height()
     this->config->Read("/general/height", &result);
     return result;
 }
+
+wxArrayString SpekPreferences::get_recent_files()
+{
+    wxArrayString result;
+    for (int i = 0; i < 10; ++i) {
+        wxString value;
+        if (this->config->Read(wxString::Format("/recent/file%d", i), &value) && !value.IsEmpty()) {
+            result.Add(value);
+        }
+    }
+    return result;
+}
+
+void SpekPreferences::add_recent_file(const wxString& value)
+{
+    wxArrayString files = this->get_recent_files();
+    int index = files.Index(value);
+    if (index != wxNOT_FOUND) {
+        files.RemoveAt(index);
+    }
+    files.Insert(value, 0);
+    while (files.GetCount() > 10) {
+        files.RemoveAt(files.GetCount() - 1);
+    }
+    for (size_t i = 0; i < files.GetCount(); ++i) {
+        this->config->Write(wxString::Format("/recent/file%d", (int)i), files[i]);
+    }
+    for (int i = (int)files.GetCount(); i < 10; ++i) {
+        this->config->DeleteEntry(wxString::Format("/recent/file%d", i), false);
+    }
+    this->config->Flush();
+}
+
+void SpekPreferences::clear_recent_files()
+{
+    for (int i = 0; i < 10; ++i) {
+        this->config->DeleteEntry(wxString::Format("/recent/file%d", i), false);
+    }
+    this->config->Flush();
+}
