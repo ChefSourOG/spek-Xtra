@@ -1,0 +1,8 @@
+[encoding: UTF-8]
+data/spek.desktop.in.in
+src/spek-info-panel.cc
+src/spek-pipeline.cc
+src/spek-preferences-dialog.cc
+src/spek-spectrogram.cc
+src/spek-window.cc
+src/spek.cc
