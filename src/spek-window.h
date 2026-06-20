@@ -28,6 +28,8 @@ private:
     void on_show_queue(wxCommandEvent& event);
     void on_compare_mode(wxCommandEvent& event);
     void on_open_secondary(wxCommandEvent& event);
+    void on_fit_window(wxCommandEvent& event);
+    void on_link_axes(wxCommandEvent& event);
     void on_fft_size(wxCommandEvent& event);
     void on_window_function(wxCommandEvent& event);
     void on_palette(wxCommandEvent& event);
@@ -70,6 +72,8 @@ private:
     wxMenuItem *menu_view_info;
     wxMenuItem *menu_view_queue;
     wxMenuItem *menu_view_compare;
+    wxMenuItem *menu_view_fit_window;
+    wxMenuItem *menu_view_link_axes;
     int info_sash_position;
     int queue_sash_position;
     wxString path;

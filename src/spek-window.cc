@@ -39,6 +39,8 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_VIEW_SHOW_QUEUE (wxID_HIGHEST + 100)
 #define ID_VIEW_COMPARE_MODE (wxID_HIGHEST + 110)
 #define ID_OPEN_SECONDARY (wxID_HIGHEST + 111)
+#define ID_VIEW_FIT_WINDOW (wxID_HIGHEST + 112)
+#define ID_VIEW_LINK_AXES (wxID_HIGHEST + 113)
 #define ID_QUEUE_OPEN_PRIMARY (wxID_HIGHEST + 94)
 #define ID_QUEUE_OPEN_SECONDARY (wxID_HIGHEST + 93)
 #define MAX_RECENT_FILES 10
@@ -58,6 +60,9 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(ID_VIEW_COMPARE_MODE, SpekWindow::on_compare_mode)
     EVT_TOOL(ID_VIEW_COMPARE_MODE, SpekWindow::on_compare_mode)
     EVT_TOOL(ID_OPEN_SECONDARY, SpekWindow::on_open_secondary)
+    EVT_MENU(ID_VIEW_FIT_WINDOW, SpekWindow::on_fit_window)
+    EVT_TOOL(ID_VIEW_FIT_WINDOW, SpekWindow::on_fit_window)
+    EVT_MENU(ID_VIEW_LINK_AXES, SpekWindow::on_link_axes)
     EVT_MENU_RANGE(ID_FFT_SIZE_BASE, ID_FFT_SIZE_BASE + 3, SpekWindow::on_fft_size)
     EVT_MENU_RANGE(ID_WINDOW_FUNCTION_BASE, ID_WINDOW_FUNCTION_BASE + 3, SpekWindow::on_window_function)
     EVT_COMMAND(-1, SPEK_NOTIFY_EVENT, SpekWindow::on_notify)
@@ -98,7 +103,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     right_panel(NULL), queue_list(NULL), queue_remove_btn(NULL),
     queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
     menu_view_info(NULL), menu_view_queue(NULL), menu_view_compare(NULL),
-    info_sash_position(width - 280), queue_sash_position(220), path(path),
+    menu_view_fit_window(NULL), menu_view_link_axes(NULL),
+    info_sash_position(width * 2), queue_sash_position(220), path(path),
     secondary_path(wxEmptyString), pngpath(pngpath), cur_dir(wxEmptyString),
     description(wxEmptyString), active_queue_index(-1)
 {
@@ -166,6 +172,15 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         menu_view, ID_VIEW_COMPARE_MODE, _("&Compare Mode"),
         wxEmptyString, wxITEM_CHECK);
     menu_view->Append(this->menu_view_compare);
+    this->menu_view_fit_window = new wxMenuItem(
+        menu_view, ID_VIEW_FIT_WINDOW, _("&Fit to Window"),
+        wxEmptyString, wxITEM_NORMAL);
+    menu_view->Append(this->menu_view_fit_window);
+    this->menu_view_link_axes = new wxMenuItem(
+        menu_view, ID_VIEW_LINK_AXES, _("&Link Axes"),
+        wxEmptyString, wxITEM_CHECK);
+    menu_view->Append(this->menu_view_link_axes);
+    this->menu_view_link_axes->Check(true);
     menu_view->AppendSeparator();
 
     wxMenu *menu_fft_size = new wxMenu();
@@ -217,6 +232,12 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR),
         wxNullBitmap,
         _("Show two spectrograms side-by-side")
+    );
+    toolbar->AddTool(
+        ID_VIEW_FIT_WINDOW,
+        wxEmptyString,
+        wxArtProvider::GetBitmap(wxART_GO_HOME, wxART_TOOLBAR),
+        _("Reset zoom to fit the full file")
     );
     toolbar->AddTool(
         ID_OPEN_SECONDARY,
@@ -347,6 +368,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
 
     SetSizer(main_sizer);
 
+    this->Layout();
     this->update_info_panel_visibility();
     this->update_queue_visibility();
 
@@ -834,6 +856,27 @@ void SpekWindow::on_show_queue(wxCommandEvent& event)
 void SpekWindow::on_compare_mode(wxCommandEvent& event)
 {
     this->set_compare_mode(event.IsChecked());
+}
+
+void SpekWindow::on_fit_window(wxCommandEvent&)
+{
+    if (this->spectrogram) {
+        this->spectrogram->reset_view();
+    }
+    if (this->spectrogram2) {
+        this->spectrogram2->reset_view();
+    }
+}
+
+void SpekWindow::on_link_axes(wxCommandEvent& event)
+{
+    bool linked = event.IsChecked();
+    if (this->spectrogram) {
+        this->spectrogram->set_axes_linked(linked);
+    }
+    if (this->spectrogram2) {
+        this->spectrogram2->set_axes_linked(linked);
+    }
 }
 
 void SpekWindow::set_compare_mode(bool compare)

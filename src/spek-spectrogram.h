@@ -29,15 +29,28 @@ public:
     void set_palette(enum palette p);
     enum palette get_palette() const { return this->palette; }
 
+    void reset_view();
+    void set_zoom(double factor, double center_t, double center_f, bool zoom_x, bool zoom_y);
+    void set_pan(int dx, int dy);
+    void set_axes_linked(bool linked);
+    bool get_axes_linked() const { return this->axes_linked; }
+
 private:
     void on_char(wxKeyEvent& evt);
     void on_paint(wxPaintEvent& evt);
     void on_size(wxSizeEvent& evt);
     void on_have_sample(wxEvent& evt);
+    void on_mouse_wheel(wxMouseEvent& evt);
+    void on_mouse_left_down(wxMouseEvent& evt);
+    void on_mouse_motion(wxMouseEvent& evt);
+    void on_mouse_left_up(wxMouseEvent& evt);
     void render(wxDC& dc, int width, int height);
 
     void start();
     void stop();
+    int calc_image_samples() const;
+    void restart_if_needed();
+    void constrain_viewport();
 
     void create_palette();
 
@@ -54,6 +67,7 @@ private:
     static const int BPAD;
     static const int GAP;
     static const int RULER;
+    static const int MAX_IMAGE_SAMPLES;
 
     std::unique_ptr<Audio> audio;
     std::unique_ptr<FFT> fft;
@@ -78,6 +92,16 @@ private:
     int fft_bits;
     int urange;
     int lrange;
+
+    // Viewport in normalized time/frequency domain [0, 1].
+    // x=time (0=start, 1=end), y=frequency (0=DC/bottom, 1=Nyquist/top).
+    double viewport_x, viewport_y, viewport_width, viewport_height;
+    bool axes_linked;
+    bool dragging;
+    wxPoint drag_start;
+    wxPoint drag_last;
+    double drag_viewport_x, drag_viewport_y;
+    int image_samples;
 
     DECLARE_EVENT_TABLE()
 };

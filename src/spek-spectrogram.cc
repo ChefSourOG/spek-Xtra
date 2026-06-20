@@ -20,6 +20,10 @@ BEGIN_EVENT_TABLE(SpekSpectrogram, wxWindow)
     EVT_CHAR(SpekSpectrogram::on_char)
     EVT_PAINT(SpekSpectrogram::on_paint)
     EVT_SIZE(SpekSpectrogram::on_size)
+    EVT_MOUSEWHEEL(SpekSpectrogram::on_mouse_wheel)
+    EVT_LEFT_DOWN(SpekSpectrogram::on_mouse_left_down)
+    EVT_MOTION(SpekSpectrogram::on_mouse_motion)
+    EVT_LEFT_UP(SpekSpectrogram::on_mouse_left_up)
     SPEK_EVT_HAVE_SAMPLE(SpekSpectrogram::on_have_sample)
 END_EVENT_TABLE()
 
@@ -37,6 +41,7 @@ const int SpekSpectrogram::RPAD = 92 * spek_platform_dpi_scale();
 const int SpekSpectrogram::BPAD = 40 * spek_platform_dpi_scale();
 const int SpekSpectrogram::GAP = 10 * spek_platform_dpi_scale();
 const int SpekSpectrogram::RULER = 10 * spek_platform_dpi_scale();
+const int SpekSpectrogram::MAX_IMAGE_SAMPLES = 8192;
 
 // Forward declarations.
 static wxString trim(wxDC& dc, const wxString& s, int length, bool trim_end);
@@ -65,7 +70,18 @@ SpekSpectrogram::SpekSpectrogram(wxWindow *parent) :
     prev_width(-1),
     fft_bits(FFT_BITS),
     urange(URANGE),
-    lrange(LRANGE)
+    lrange(LRANGE),
+    viewport_x(0.0),
+    viewport_y(0.0),
+    viewport_width(1.0),
+    viewport_height(1.0),
+    axes_linked(true),
+    dragging(false),
+    drag_start(0, 0),
+    drag_last(0, 0),
+    drag_viewport_x(0.0),
+    drag_viewport_y(0.0),
+    image_samples(0)
 {
     this->create_palette();
 
@@ -84,8 +100,9 @@ void SpekSpectrogram::open(const wxString& path, const wxString& pngpath)
     this->pngpath = pngpath;
     this->stream = 0;
     this->channel = 0;
-    start();
-    Refresh();
+    // Force the pipeline to restart even if the viewport/image size hasn't changed.
+    this->image_samples = 0;
+    this->reset_view();
 }
 
 void SpekSpectrogram::get_info(SpekAudioInfo& info) const
@@ -131,12 +148,22 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
         return wxBitmap(width, height);
     }
 
-    // Stop the current analysis and preserve the in-window image.
+    // Stop the current analysis and preserve the in-window image and viewport.
     this->stop();
     wxImage saved_image = this->image;
+    double saved_viewport_x = this->viewport_x;
+    double saved_viewport_y = this->viewport_y;
+    double saved_viewport_width = this->viewport_width;
+    double saved_viewport_height = this->viewport_height;
+    int saved_image_samples = this->image_samples;
 
-    // Render at the requested resolution.
+    // Render the full file at the requested resolution.
+    this->viewport_x = 0.0;
+    this->viewport_y = 0.0;
+    this->viewport_width = 1.0;
+    this->viewport_height = 1.0;
     int samples = width - LPAD - RPAD;
+    this->image_samples = samples > 0 ? samples : 1;
     if (samples > 0) {
         this->image.Create(samples, bits_to_bands(this->fft_bits));
         this->pipeline = spek_pipeline_open(
@@ -164,8 +191,13 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
     render(dc, width, height);
     dc.SelectObject(wxNullBitmap);
 
-    // Restore the in-window image and restart the normal analysis.
+    // Restore the in-window image, viewport, and restart the normal analysis.
     this->image = saved_image;
+    this->viewport_x = saved_viewport_x;
+    this->viewport_y = saved_viewport_y;
+    this->viewport_width = saved_viewport_width;
+    this->viewport_height = saved_viewport_height;
+    this->image_samples = saved_image_samples;
     this->start();
 
     return bitmap;
@@ -270,7 +302,7 @@ void SpekSpectrogram::on_size(wxSizeEvent&)
     this->prev_width = size.GetWidth();
 
     if (width_changed) {
-        start();
+        this->restart_if_needed();
     }
 }
 
@@ -381,10 +413,34 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
         TPAD - 2 * GAP - normal_height - small_height
     );
 
-    if (this->image.GetWidth() > 1 && this->image.GetHeight() > 1 &&
-        w - LPAD - RPAD > 0 && h - TPAD - BPAD > 0) {
-        // Draw the spectrogram.
-        wxBitmap bmp(this->image.Scale(w - LPAD - RPAD, h - TPAD - BPAD));
+    int plot_w = w - LPAD - RPAD;
+    int plot_h = h - TPAD - BPAD;
+    int img_w = this->image.GetWidth();
+    int img_h = this->image.GetHeight();
+
+    if (img_w > 1 && img_h > 1 && plot_w > 0 && plot_h > 0) {
+        // Draw the visible portion of the spectrogram.
+        double src_xd = this->viewport_x * (img_w - 1);
+        double src_yd = (1.0 - this->viewport_y - this->viewport_height) * (img_h - 1);
+        double src_wd = this->viewport_width * (img_w - 1);
+        double src_hd = this->viewport_height * (img_h - 1);
+
+        int src_x = (int)round(src_xd);
+        int src_y = (int)round(src_yd);
+        int src_w = (int)round(src_wd);
+        int src_h = (int)round(src_hd);
+
+        if (src_x < 0) src_x = 0;
+        if (src_y < 0) src_y = 0;
+        if (src_x >= img_w) src_x = img_w - 1;
+        if (src_y >= img_h) src_y = img_h - 1;
+        if (src_x + src_w > img_w) src_w = img_w - src_x;
+        if (src_y + src_h > img_h) src_h = img_h - src_y;
+        if (src_w < 1) src_w = 1;
+        if (src_h < 1) src_h = 1;
+
+        wxImage sub = this->image.GetSubImage(wxRect(src_x, src_y, src_w, src_h));
+        wxBitmap bmp(sub.Scale(plot_w, plot_h));
         dc.DrawBitmap(bmp, LPAD, TPAD);
 
         // File name.
@@ -399,7 +455,7 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
 
         dc.SetFont(large_font);
         dc.DrawText(
-            trim(dc, file_name, w - LPAD - RPAD, false),
+            trim(dc, file_name, plot_w, false),
             LPAD,
             TPAD - 2 * GAP - normal_height - large_height
         );
@@ -407,7 +463,7 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
         // File properties.
         dc.SetFont(normal_font);
         dc.DrawText(
-            trim(dc, this->desc, w - LPAD - RPAD, true),
+            trim(dc, this->desc, plot_w, true),
             LPAD,
             TPAD - GAP - normal_height
         );
@@ -415,9 +471,11 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
         // Prepare to draw the rulers.
         dc.SetFont(small_font);
 
-        if (this->duration) {
+        if (this->duration > 0.0) {
             // Time ruler.
             int time_factors[] = {1, 2, 5, 10, 20, 30, 1*60, 2*60, 5*60, 10*60, 20*60, 30*60, 0};
+            double time_min = this->viewport_x * this->duration;
+            double time_max = (this->viewport_x + this->viewport_width) * this->duration;
             SpekRuler time_ruler(
                 LPAD,
                 h - BPAD,
@@ -425,19 +483,21 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
                 // TODO: i18n
                 "00:00",
                 time_factors,
-                0,
-                (int)this->duration,
+                (int)time_min,
+                (int)time_max,
                 1.5,
-                (w - LPAD - RPAD) / this->duration,
+                plot_w / (time_max - time_min),
                 0.0,
                 time_formatter
                 );
             time_ruler.draw(dc);
         }
 
-        if (this->sample_rate) {
+        if (this->sample_rate > 0) {
             // Frequency ruler.
-            int freq = this->sample_rate / 2;
+            double freq = this->sample_rate / 2.0;
+            double freq_min = this->viewport_y * freq;
+            double freq_max = (this->viewport_y + this->viewport_height) * freq;
             int freq_factors[] = {1000, 2000, 5000, 10000, 20000, 0};
             SpekRuler freq_ruler(
                 LPAD,
@@ -446,10 +506,10 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
                 // TRANSLATORS: keep "00" unchanged, it's used to calc the text width
                 _("00 kHz"),
                 freq_factors,
-                0,
-                freq,
+                (int)freq_min,
+                (int)freq_max,
                 3.0,
-                (h - TPAD - BPAD) / (double)freq,
+                plot_h / (freq_max - freq_min),
                 0.0,
                 freq_formatter
                 );
@@ -503,11 +563,12 @@ void SpekSpectrogram::start()
 
     this->stop();
 
-    // The number of samples is the number of pixels available for the image.
+    // The number of samples is based on the window width and the current time
+    // zoom so the visible time range is rendered at adequate resolution.
     // The number of bands is fixed, FFT results are very different for
     // different values but we need some consistency.
-    wxSize size = GetClientSize();
-    int samples = size.GetWidth() - LPAD - RPAD;
+    int samples = this->calc_image_samples();
+    this->image_samples = samples;
     if (samples > 0) {
         this->image.Create(samples, bits_to_bands(this->fft_bits));
         this->pipeline = spek_pipeline_open(
@@ -574,6 +635,222 @@ void SpekSpectrogram::set_palette(enum palette p)
         this->palette = p;
         this->create_palette();
         this->start();
+    }
+}
+
+void SpekSpectrogram::reset_view()
+{
+    this->viewport_x = 0.0;
+    this->viewport_y = 0.0;
+    this->viewport_width = 1.0;
+    this->viewport_height = 1.0;
+    this->restart_if_needed();
+    this->Refresh();
+}
+
+void SpekSpectrogram::set_zoom(double factor, double center_t, double center_f, bool zoom_x, bool zoom_y)
+{
+    if (factor <= 0.0 || (!zoom_x && !zoom_y)) {
+        return;
+    }
+
+    if (zoom_x) {
+        double new_width = this->viewport_width / factor;
+        double rel = 0.5;
+        if (this->viewport_width > 0.0) {
+            rel = (center_t - this->viewport_x) / this->viewport_width;
+        }
+        this->viewport_x = center_t - rel * new_width;
+        this->viewport_width = new_width;
+    }
+
+    if (zoom_y) {
+        double new_height = this->viewport_height / factor;
+        double rel = 0.5;
+        if (this->viewport_height > 0.0) {
+            rel = (center_f - this->viewport_y) / this->viewport_height;
+        }
+        this->viewport_y = center_f - rel * new_height;
+        this->viewport_height = new_height;
+    }
+
+    this->constrain_viewport();
+    this->restart_if_needed();
+    this->Refresh();
+}
+
+void SpekSpectrogram::set_pan(int dx, int dy)
+{
+    wxSize size = GetClientSize();
+    int plot_w = size.GetWidth() - LPAD - RPAD;
+    int plot_h = size.GetHeight() - TPAD - BPAD;
+
+    if (plot_w > 0 && dx != 0) {
+        this->viewport_x -= (double)dx / plot_w * this->viewport_width;
+    }
+    if (plot_h > 0 && dy != 0) {
+        this->viewport_y -= (double)dy / plot_h * this->viewport_height;
+    }
+
+    this->constrain_viewport();
+    this->Refresh();
+}
+
+void SpekSpectrogram::set_axes_linked(bool linked)
+{
+    this->axes_linked = linked;
+}
+
+int SpekSpectrogram::calc_image_samples() const
+{
+    wxSize size = GetClientSize();
+    int base = size.GetWidth() - LPAD - RPAD;
+    if (base < 1) {
+        base = 1;
+    }
+    if (this->viewport_width <= 0.0 || this->viewport_width >= 1.0) {
+        return base;
+    }
+    double needed = base / this->viewport_width;
+    if (needed > MAX_IMAGE_SAMPLES) {
+        needed = MAX_IMAGE_SAMPLES;
+    }
+    return (int)needed;
+}
+
+void SpekSpectrogram::restart_if_needed()
+{
+    if (this->path.IsEmpty()) {
+        return;
+    }
+    int needed = this->calc_image_samples();
+    if (needed != this->image_samples) {
+        this->start();
+    }
+}
+
+void SpekSpectrogram::constrain_viewport()
+{
+    const double MIN_VIEWPORT = 1e-6;
+
+    if (this->viewport_width < MIN_VIEWPORT) {
+        this->viewport_width = MIN_VIEWPORT;
+    }
+    if (this->viewport_height < MIN_VIEWPORT) {
+        this->viewport_height = MIN_VIEWPORT;
+    }
+    if (this->viewport_width > 1.0) {
+        this->viewport_width = 1.0;
+    }
+    if (this->viewport_height > 1.0) {
+        this->viewport_height = 1.0;
+    }
+    if (this->viewport_x < 0.0) {
+        this->viewport_x = 0.0;
+    }
+    if (this->viewport_y < 0.0) {
+        this->viewport_y = 0.0;
+    }
+    if (this->viewport_x + this->viewport_width > 1.0) {
+        this->viewport_x = 1.0 - this->viewport_width;
+    }
+    if (this->viewport_y + this->viewport_height > 1.0) {
+        this->viewport_y = 1.0 - this->viewport_height;
+    }
+}
+
+void SpekSpectrogram::on_mouse_wheel(wxMouseEvent& evt)
+{
+    wxSize size = GetClientSize();
+    int plot_w = size.GetWidth() - LPAD - RPAD;
+    int plot_h = size.GetHeight() - TPAD - BPAD;
+    int mx = evt.GetX() - LPAD;
+    int my = evt.GetY() - TPAD;
+
+    if (plot_w <= 0 || plot_h <= 0 || mx < 0 || mx >= plot_w || my < 0 || my >= plot_h) {
+        evt.Skip();
+        return;
+    }
+
+    double rotation = evt.GetWheelRotation();
+    if (rotation == 0.0) {
+        return;
+    }
+
+    double factor = (rotation > 0.0) ? 1.1 : 1.0 / 1.1;
+    double center_t = this->viewport_x + (double)mx / plot_w * this->viewport_width;
+    double center_f = this->viewport_y + (double)my / plot_h * this->viewport_height;
+
+    bool zoom_x, zoom_y;
+    if (evt.ControlDown()) {
+        zoom_x = true;
+        zoom_y = false;
+    } else if (evt.ShiftDown()) {
+        zoom_x = false;
+        zoom_y = true;
+    } else if (this->axes_linked) {
+        zoom_x = true;
+        zoom_y = true;
+    } else {
+        zoom_x = true;
+        zoom_y = false;
+    }
+
+    this->set_zoom(factor, center_t, center_f, zoom_x, zoom_y);
+}
+
+void SpekSpectrogram::on_mouse_left_down(wxMouseEvent& evt)
+{
+    wxSize size = GetClientSize();
+    int plot_w = size.GetWidth() - LPAD - RPAD;
+    int plot_h = size.GetHeight() - TPAD - BPAD;
+    int mx = evt.GetX() - LPAD;
+    int my = evt.GetY() - TPAD;
+
+    if (plot_w <= 0 || plot_h <= 0 || mx < 0 || mx >= plot_w || my < 0 || my >= plot_h) {
+        evt.Skip();
+        return;
+    }
+
+    this->dragging = true;
+    this->drag_start = evt.GetPosition();
+    this->drag_last = evt.GetPosition();
+    this->drag_viewport_x = this->viewport_x;
+    this->drag_viewport_y = this->viewport_y;
+    this->CaptureMouse();
+}
+
+void SpekSpectrogram::on_mouse_motion(wxMouseEvent& evt)
+{
+    if (!this->dragging) {
+        evt.Skip();
+        return;
+    }
+
+    if (!evt.LeftIsDown()) {
+        this->dragging = false;
+        if (this->HasCapture()) {
+            this->ReleaseMouse();
+        }
+        return;
+    }
+
+    int dx = evt.GetX() - this->drag_last.x;
+    int dy = evt.GetY() - this->drag_last.y;
+    this->drag_last = evt.GetPosition();
+
+    this->set_pan(dx, dy);
+}
+
+void SpekSpectrogram::on_mouse_left_up(wxMouseEvent& evt)
+{
+    if (this->dragging) {
+        this->dragging = false;
+        if (this->HasCapture()) {
+            this->ReleaseMouse();
+        }
+    } else {
+        evt.Skip();
     }
 }
 
