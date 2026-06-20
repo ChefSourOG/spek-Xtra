@@ -39,6 +39,7 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_VIEW_SHOW_QUEUE (wxID_HIGHEST + 100)
 #define ID_VIEW_COMPARE_MODE (wxID_HIGHEST + 110)
 #define ID_OPEN_SECONDARY (wxID_HIGHEST + 111)
+#define ID_QUEUE_OPEN_PRIMARY (wxID_HIGHEST + 94)
 #define ID_QUEUE_OPEN_SECONDARY (wxID_HIGHEST + 93)
 #define MAX_RECENT_FILES 10
 #define MAX_QUEUE_FILES 100
@@ -63,6 +64,7 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_BUTTON(ID_QUEUE_REMOVE, SpekWindow::on_queue_remove)
     EVT_BUTTON(ID_QUEUE_CLEAR, SpekWindow::on_queue_clear)
     EVT_LISTBOX(ID_QUEUE_LIST, SpekWindow::on_queue_select)
+    EVT_MENU(ID_QUEUE_OPEN_PRIMARY, SpekWindow::on_queue_open_primary)
     EVT_MENU(ID_QUEUE_OPEN_SECONDARY, SpekWindow::on_queue_open_secondary)
 END_EVENT_TABLE()
 
@@ -884,15 +886,32 @@ void SpekWindow::load_secondary_file(const wxString& path)
     }
 }
 
-void SpekWindow::on_queue_context_menu(wxContextMenuEvent&)
+void SpekWindow::on_queue_context_menu(wxContextMenuEvent& event)
 {
-    if (this->queue_list->GetSelection() == wxNOT_FOUND) {
+    int index = wxNOT_FOUND;
+    wxPoint pos = event.GetPosition();
+    if (pos != wxDefaultPosition) {
+        index = this->queue_list->HitTest(this->queue_list->ScreenToClient(pos));
+    } else {
+        index = this->queue_list->GetSelection();
+    }
+    if (index == wxNOT_FOUND) {
         return;
     }
+    this->queue_list->SetSelection(index);
 
     wxMenu menu;
+    menu.Append(ID_QUEUE_OPEN_PRIMARY, _("Open in Primary Panel"));
     menu.Append(ID_QUEUE_OPEN_SECONDARY, _("Open in Secondary Panel"));
     this->PopupMenu(&menu);
+}
+
+void SpekWindow::on_queue_open_primary(wxCommandEvent&)
+{
+    int index = this->queue_list->GetSelection();
+    if (index != wxNOT_FOUND) {
+        this->load_queue_item(index);
+    }
 }
 
 void SpekWindow::on_queue_open_secondary(wxCommandEvent&)

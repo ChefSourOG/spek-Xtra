@@ -37,6 +37,7 @@ private:
     void on_queue_remove(wxCommandEvent& event);
     void on_queue_clear(wxCommandEvent& event);
     void on_queue_context_menu(wxContextMenuEvent& event);
+    void on_queue_open_primary(wxCommandEvent& event);
     void on_queue_open_secondary(wxCommandEvent& event);
     void on_info_sash_changed(wxSplitterEvent& event);
     void populate_recent_files_menu();
