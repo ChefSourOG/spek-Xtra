@@ -12,6 +12,7 @@
 #include <spek-utils.h>
 
 #include "spek-artwork.h"
+#include "spek-export-dialog.h"
 #include "spek-info-panel.h"
 #include "spek-palette.h"
 #include "spek-preferences-dialog.h"
@@ -26,10 +27,11 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_FFT_SIZE_BASE (wxID_HIGHEST + 20)
 #define ID_WINDOW_FUNCTION_BASE (wxID_HIGHEST + 30)
 #define ID_PALETTE_BASE (wxID_HIGHEST + 40)
+#define ID_EXPORT_IMAGE (wxID_HIGHEST + 60)
 
 BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(wxID_OPEN, SpekWindow::on_open)
-    EVT_MENU(wxID_SAVE, SpekWindow::on_save)
+    EVT_MENU(ID_EXPORT_IMAGE, SpekWindow::on_export)
     EVT_MENU(wxID_EXIT, SpekWindow::on_exit)
     EVT_MENU(wxID_PREFERENCES, SpekWindow::on_preferences)
     EVT_MENU(wxID_HELP, SpekWindow::on_help)
@@ -96,8 +98,9 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     wxMenu *menu_file = new wxMenu();
     wxMenuItem *menu_file_open = new wxMenuItem(menu_file, wxID_OPEN);
     menu_file->Append(menu_file_open);
-    wxMenuItem *menu_file_save = new wxMenuItem(menu_file, wxID_SAVE);
-    menu_file->Append(menu_file_save);
+    this->menu_file_export = new wxMenuItem(menu_file, ID_EXPORT_IMAGE, _("Export &Image..."));
+    this->menu_file_export->SetItemLabel(this->menu_file_export->GetItemLabelText() + "\tCtrl+S");
+    menu_file->Append(this->menu_file_export);
     menu_file->AppendSeparator();
     menu_file->Append(wxID_EXIT);
     menu->Append(menu_file, _("&File"));
@@ -154,10 +157,10 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         menu_file_open->GetItemLabelText()
     );
     toolbar->AddTool(
-        wxID_SAVE,
+        ID_EXPORT_IMAGE,
         wxEmptyString,
         wxArtProvider::GetBitmap(ART_SAVE, wxART_TOOLBAR),
-        menu_file_save->GetItemLabelText()
+        menu_file_export->GetItemLabelText()
     );
     toolbar->AddStretchableSpace();
     toolbar->AddTool(
@@ -236,6 +239,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     if (!path.IsEmpty()) {
         open(path);
     }
+    this->menu_file_export->Enable(!this->path.IsEmpty());
 
     SetDropTarget(new SpekDropTarget(this));
 
@@ -258,6 +262,10 @@ void SpekWindow::open(const wxString& path)
         this->spectrogram->open(path, this->pngpath);
 
         this->update_info_panel_info();
+
+        if (this->menu_file_export) {
+            this->menu_file_export->Enable(true);
+        }
     }
 }
 
@@ -338,39 +346,49 @@ void SpekWindow::on_open(wxCommandEvent&)
     dlg->Destroy();
 }
 
-void SpekWindow::on_save(wxCommandEvent&)
+void SpekWindow::on_export(wxCommandEvent&)
 {
-    static wxString filters = wxEmptyString;
-
-    if (filters.IsEmpty()) {
-        filters = _("PNG images");
-        filters += "|*.png";
-    }
-
-    wxFileDialog *dlg = new wxFileDialog(
-        this,
-        _("Save Spectrogram"),
-        this->cur_dir,
-        wxEmptyString,
-        filters,
-        wxFD_SAVE | wxFD_OVERWRITE_PROMPT
-    );
-
-    // Suggested name is <file_name>.png
-    wxString name = _("Untitled");
+    wxString default_name = _("Untitled.png");
     if (!this->path.IsEmpty()) {
         wxFileName file_name(this->path);
-        name = file_name.GetFullName();
-    }
-    name += ".png";
-    dlg->SetFilename(name);
-
-    if (dlg->ShowModal() == wxID_OK) {
-        this->cur_dir = dlg->GetDirectory();
-        this->spectrogram->save(dlg->GetPath());
+        default_name = file_name.GetFullName() + wxT(".png");
     }
 
-    dlg->Destroy();
+    SpekExportDialog dlg(this, default_name);
+    if (dlg.ShowModal() != wxID_OK) {
+        return;
+    }
+
+    SpekExportOptions options = dlg.get_options();
+    wxString path = dlg.get_path();
+    if (path.IsEmpty()) {
+        return;
+    }
+
+    wxBitmap bitmap = this->spectrogram->render_export(options.width, options.height);
+
+    wxBitmapType type = wxBITMAP_TYPE_PNG;
+    switch (options.format) {
+    case EXPORT_FORMAT_JPEG:
+        type = wxBITMAP_TYPE_JPEG;
+        break;
+    case EXPORT_FORMAT_BMP:
+        type = wxBITMAP_TYPE_BMP;
+        break;
+    case EXPORT_FORMAT_PNG:
+    default:
+        type = wxBITMAP_TYPE_PNG;
+        break;
+    }
+
+    if (!bitmap.SaveFile(path, type)) {
+        wxMessageBox(
+            wxString::Format(_("Failed to save image to %s"), path.c_str()),
+            _("Export Error"),
+            wxOK | wxICON_ERROR,
+            this
+        );
+    }
 }
 
 void SpekWindow::on_exit(wxCommandEvent&)

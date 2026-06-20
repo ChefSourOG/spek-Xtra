@@ -1,6 +1,8 @@
 #include <cmath>
 
+#include <wx/bitmap.h>
 #include <wx/dcbuffer.h>
+#include <wx/dcmemory.h>
 #include <wx/filename.h>
 
 #include "spek-audio.h"
@@ -116,8 +118,57 @@ void SpekSpectrogram::save(const wxString& path)
     wxSize size = GetClientSize();
     wxBitmap bitmap(size.GetWidth(), size.GetHeight());
     wxMemoryDC dc(bitmap);
-    render(dc);
+    render(dc, size.GetWidth(), size.GetHeight());
     bitmap.SaveFile(path, wxBITMAP_TYPE_PNG);
+}
+
+// Forward declaration used by render_export and start.
+static void pipeline_cb(int bands, int sample, float *values, void *cb_data);
+
+wxBitmap SpekSpectrogram::render_export(int width, int height)
+{
+    if (this->path.IsEmpty()) {
+        return wxBitmap(width, height);
+    }
+
+    // Stop the current analysis and preserve the in-window image.
+    this->stop();
+    wxImage saved_image = this->image;
+
+    // Render at the requested resolution.
+    int samples = width - LPAD - RPAD;
+    if (samples > 0) {
+        this->image.Create(samples, bits_to_bands(this->fft_bits));
+        this->pipeline = spek_pipeline_open(
+            this->audio->open(std::string(this->path.utf8_str()), this->stream),
+            this->fft->create(this->fft_bits),
+            this->stream,
+            this->channel,
+            this->window_function,
+            samples,
+            pipeline_cb,
+            this
+        );
+        spek_pipeline_start(this->pipeline);
+
+        // Process events until the export pipeline finishes.
+        while (this->pipeline) {
+            wxApp::GetInstance()->ProcessPendingEvents();
+        }
+    } else {
+        this->image.Create(1, 1);
+    }
+
+    wxBitmap bitmap(width, height);
+    wxMemoryDC dc(bitmap);
+    render(dc, width, height);
+    dc.SelectObject(wxNullBitmap);
+
+    // Restore the in-window image and restart the normal analysis.
+    this->image = saved_image;
+    this->start();
+
+    return bitmap;
 }
 
 void SpekSpectrogram::on_char(wxKeyEvent& evt)
@@ -208,7 +259,8 @@ void SpekSpectrogram::on_char(wxKeyEvent& evt)
 void SpekSpectrogram::on_paint(wxPaintEvent&)
 {
     wxAutoBufferedPaintDC dc(this);
-    render(dc);
+    wxSize size = GetClientSize();
+    render(dc, size.GetWidth(), size.GetHeight());
 }
 
 void SpekSpectrogram::on_size(wxSizeEvent&)
@@ -279,11 +331,10 @@ static wxString density_formatter(int unit)
     return wxString::Format(_("%d dB"), -unit);
 }
 
-void SpekSpectrogram::render(wxDC& dc)
+void SpekSpectrogram::render(wxDC& dc, int width, int height)
 {
-    wxSize size = GetClientSize();
-    int w = size.GetWidth();
-    int h = size.GetHeight();
+    int w = width;
+    int h = height;
 
     // Initialise.
     dc.SetBackground(*wxBLACK_BRUSH);

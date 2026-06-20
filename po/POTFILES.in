@@ -1,5 +1,6 @@
 [encoding: UTF-8]
 data/spek.desktop.in.in
+src/spek-export-dialog.cc
 src/spek-info-panel.cc
 src/spek-pipeline.cc
 src/spek-preferences-dialog.cc

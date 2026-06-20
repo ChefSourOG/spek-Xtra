@@ -20,6 +20,7 @@ public:
     ~SpekSpectrogram();
     void open(const wxString& path, const wxString& pngpath);
     void save(const wxString& path);
+    wxBitmap render_export(int width, int height);
     void get_info(SpekAudioInfo& info) const;
     void set_fft_bits(int bits);
     int get_fft_bits() const { return this->fft_bits; }
@@ -33,7 +34,7 @@ private:
     void on_paint(wxPaintEvent& evt);
     void on_size(wxSizeEvent& evt);
     void on_have_sample(wxEvent& evt);
-    void render(wxDC& dc);
+    void render(wxDC& dc, int width, int height);
 
     void start();
     void stop();

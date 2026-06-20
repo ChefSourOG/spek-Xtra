@@ -30,6 +30,8 @@ spek_SOURCES = \
 	spek-artwork.h \
 	spek-events.cc \
 	spek-events.h \
+	spek-export-dialog.cc \
+	spek-export-dialog.h \
 	spek-info-panel.cc \
 	spek-info-panel.h \
 	spek-platform.cc \

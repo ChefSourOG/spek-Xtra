@@ -14,7 +14,7 @@ public:
 
 private:
     void on_open(wxCommandEvent& event);
-    void on_save(wxCommandEvent& event);
+    void on_export(wxCommandEvent& event);
     void on_exit(wxCommandEvent& event);
     void on_preferences(wxCommandEvent& event);
     void on_help(wxCommandEvent& event);
@@ -32,6 +32,7 @@ private:
     SpekSpectrogram *spectrogram;
     SpekInfoPanel *info_panel;
     wxSplitterWindow *splitter;
+    wxMenuItem *menu_file_export;
     wxMenuItem *menu_view_info;
     int info_sash_position;
     wxString path;
