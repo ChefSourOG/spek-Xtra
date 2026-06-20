@@ -42,6 +42,7 @@ private:
     void on_queue_open_primary(wxCommandEvent& event);
     void on_queue_open_secondary(wxCommandEvent& event);
     void on_info_sash_changed(wxSplitterEvent& event);
+    void on_size(wxSizeEvent& event);
     void populate_recent_files_menu();
     void update_info_panel_visibility();
     void update_info_panel_info();
@@ -74,7 +75,9 @@ private:
     wxMenuItem *menu_view_compare;
     wxMenuItem *menu_view_fit_window;
     wxMenuItem *menu_view_link_axes;
+    wxStatusBar *status_bar;
     int info_sash_position;
+    int info_panel_width;
     int queue_sash_position;
     wxString path;
     wxString secondary_path;

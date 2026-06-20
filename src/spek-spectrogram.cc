@@ -24,6 +24,7 @@ BEGIN_EVENT_TABLE(SpekSpectrogram, wxWindow)
     EVT_LEFT_DOWN(SpekSpectrogram::on_mouse_left_down)
     EVT_MOTION(SpekSpectrogram::on_mouse_motion)
     EVT_LEFT_UP(SpekSpectrogram::on_mouse_left_up)
+    EVT_LEAVE_WINDOW(SpekSpectrogram::on_mouse_leave)
     SPEK_EVT_HAVE_SAMPLE(SpekSpectrogram::on_have_sample)
 END_EVENT_TABLE()
 
@@ -46,6 +47,8 @@ const int SpekSpectrogram::MAX_IMAGE_SAMPLES = 8192;
 // Forward declarations.
 static wxString trim(wxDC& dc, const wxString& s, int length, bool trim_end);
 static int bits_to_bands(int bits);
+static wxString format_freq(double freq);
+static wxString format_time(double time);
 
 SpekSpectrogram::SpekSpectrogram(wxWindow *parent) :
     wxWindow(
@@ -67,6 +70,8 @@ SpekSpectrogram::SpekSpectrogram(wxWindow *parent) :
     palette(PALETTE_DEFAULT),
     palette_image(),
     image(1, 1),
+    image_data(),
+    status_bar(NULL),
     prev_width(-1),
     fft_bits(FFT_BITS),
     urange(URANGE),
@@ -151,6 +156,7 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
     // Stop the current analysis and preserve the in-window image and viewport.
     this->stop();
     wxImage saved_image = this->image;
+    std::vector<float> saved_image_data = this->image_data;
     double saved_viewport_x = this->viewport_x;
     double saved_viewport_y = this->viewport_y;
     double saved_viewport_width = this->viewport_width;
@@ -165,7 +171,9 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
     int samples = width - LPAD - RPAD;
     this->image_samples = samples > 0 ? samples : 1;
     if (samples > 0) {
-        this->image.Create(samples, bits_to_bands(this->fft_bits));
+        int bands = bits_to_bands(this->fft_bits);
+        this->image.Create(samples, bands);
+        this->image_data.assign(samples * bands, this->lrange);
         this->pipeline = spek_pipeline_open(
             this->audio->open(std::string(this->path.utf8_str()), this->stream),
             this->fft->create(this->fft_bits),
@@ -184,6 +192,7 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
         }
     } else {
         this->image.Create(1, 1);
+        this->image_data.assign(1, this->lrange);
     }
 
     wxBitmap bitmap(width, height);
@@ -193,6 +202,7 @@ wxBitmap SpekSpectrogram::render_export(int width, int height)
 
     // Restore the in-window image, viewport, and restart the normal analysis.
     this->image = saved_image;
+    this->image_data = saved_image_data;
     this->viewport_x = saved_viewport_x;
     this->viewport_y = saved_viewport_y;
     this->viewport_width = saved_viewport_width;
@@ -331,12 +341,14 @@ void SpekSpectrogram::on_have_sample(wxEvent& event)
     // TODO: check image size, quit if wrong.
     double range = this->urange - this->lrange;
     for (int y = 0; y < bands; y++) {
+        int row = bands - y - 1;
+        this->image_data[sample * bands + row] = values[y];
         double value = fmin(this->urange, fmax(this->lrange, values[y]));
         double level = (value - this->lrange) / range;
         uint32_t color = spek_palette(this->palette, level);
         this->image.SetRGB(
             sample,
-            bands - y - 1,
+            row,
             color >> 16,
             (color >> 8) & 0xFF,
             color & 0xFF
@@ -361,6 +373,23 @@ static wxString freq_formatter(int unit)
 static wxString density_formatter(int unit)
 {
     return wxString::Format(_("%d dB"), -unit);
+}
+
+static wxString format_freq(double freq)
+{
+    if (freq < 1000.0) {
+        return wxString::Format(_("%.0f Hz"), freq);
+    }
+    return wxString::Format(_("%.1f kHz"), freq / 1000.0);
+}
+
+static wxString format_time(double time)
+{
+    int total_ms = (int)(time * 1000.0 + 0.5);
+    int ms = total_ms % 1000;
+    int secs = (total_ms / 1000) % 60;
+    int mins = total_ms / 60000;
+    return wxString::Format("%d:%02d.%03d", mins, secs, ms);
 }
 
 void SpekSpectrogram::render(wxDC& dc, int width, int height)
@@ -570,7 +599,9 @@ void SpekSpectrogram::start()
     int samples = this->calc_image_samples();
     this->image_samples = samples;
     if (samples > 0) {
-        this->image.Create(samples, bits_to_bands(this->fft_bits));
+        int bands = bits_to_bands(this->fft_bits);
+        this->image.Create(samples, bands);
+        this->image_data.assign(samples * bands, this->lrange);
         this->pipeline = spek_pipeline_open(
             this->audio->open(std::string(this->path.utf8_str()), this->stream),
             this->fft->create(this->fft_bits),
@@ -593,6 +624,7 @@ void SpekSpectrogram::start()
         this->fft_size = 1 << this->fft_bits;
     } else {
         this->image.Create(1, 1);
+        this->image_data.assign(1, this->lrange);
     }
 }
 
@@ -822,6 +854,10 @@ void SpekSpectrogram::on_mouse_left_down(wxMouseEvent& evt)
 
 void SpekSpectrogram::on_mouse_motion(wxMouseEvent& evt)
 {
+    int mx = evt.GetX() - LPAD;
+    int my = evt.GetY() - TPAD;
+    this->update_readout(mx, my);
+
     if (!this->dragging) {
         evt.Skip();
         return;
@@ -840,6 +876,60 @@ void SpekSpectrogram::on_mouse_motion(wxMouseEvent& evt)
     this->drag_last = evt.GetPosition();
 
     this->set_pan(dx, dy);
+}
+
+void SpekSpectrogram::on_mouse_leave(wxMouseEvent& evt)
+{
+    if (this->status_bar) {
+        this->status_bar->SetStatusText(wxEmptyString);
+    }
+    evt.Skip();
+}
+
+void SpekSpectrogram::update_readout(int mx, int my)
+{
+    if (!this->status_bar) {
+        return;
+    }
+
+    if (this->path.IsEmpty()) {
+        this->status_bar->SetStatusText(wxEmptyString);
+        return;
+    }
+
+    wxSize size = GetClientSize();
+    int plot_w = size.GetWidth() - LPAD - RPAD;
+    int plot_h = size.GetHeight() - TPAD - BPAD;
+    int img_w = this->image.GetWidth();
+    int img_h = this->image.GetHeight();
+
+    if (plot_w <= 0 || plot_h <= 0 || img_w <= 1 || img_h <= 1 ||
+        mx < 0 || mx >= plot_w || my < 0 || my >= plot_h) {
+        this->status_bar->SetStatusText(wxEmptyString);
+        return;
+    }
+
+    double time_norm = this->viewport_x + (double)mx / plot_w * this->viewport_width;
+    double time_sec = time_norm * this->duration;
+
+    double freq_norm = this->viewport_y + (1.0 - (double)my / plot_h) * this->viewport_height;
+    double freq_hz = freq_norm * this->sample_rate / 2.0;
+
+    double img_col_d = this->viewport_x * (img_w - 1) +
+        (double)mx / plot_w * this->viewport_width * (img_w - 1);
+    double img_row_d = (1.0 - this->viewport_y - this->viewport_height) * (img_h - 1) +
+        (double)my / plot_h * this->viewport_height * (img_h - 1);
+    int img_col = (int)round(fmax(0.0, fmin((double)(img_w - 1), img_col_d)));
+    int img_row = (int)round(fmax(0.0, fmin((double)(img_h - 1), img_row_d)));
+
+    float db = this->image_data[img_col * img_h + img_row];
+
+    wxString freq_str = format_freq(freq_hz);
+    wxString time_str = format_time(time_sec);
+    wxString db_str = wxString::Format(_("%.0f dB"), db);
+    this->status_bar->SetStatusText(
+        wxString::Format(_("%s, %s, %s"), freq_str, time_str, db_str)
+    );
 }
 
 void SpekSpectrogram::on_mouse_left_up(wxMouseEvent& evt)

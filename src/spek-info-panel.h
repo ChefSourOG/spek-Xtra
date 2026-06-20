@@ -7,16 +7,16 @@
 struct SpekAudioInfo
 {
     wxString file_type;
-    int sample_rate;
-    int bit_depth;
-    int channels;
-    double duration;
-    int nyquist;
-    double file_size_mb;
-    int64_t total_samples;
-    int64_t analysis_frames;
-    int fft_size;
-    double freq_resolution;
+    int sample_rate = 0;
+    int bit_depth = 0;
+    int channels = 0;
+    double duration = 0.0;
+    int nyquist = 0;
+    double file_size_mb = 0.0;
+    int64_t total_samples = 0;
+    int64_t analysis_frames = 0;
+    int fft_size = 0;
+    double freq_resolution = 0.0;
 };
 
 class SpekInfoPanel : public wxPanel

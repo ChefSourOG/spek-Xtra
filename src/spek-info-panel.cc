@@ -175,20 +175,17 @@ void SpekInfoPanel::set_info(const SpekAudioInfo& info)
 
 void SpekInfoPanel::clear()
 {
-    SpekAudioInfo info;
-    fill_values(
-        this->file_type_value,
-        this->sample_rate_value,
-        this->bit_depth_value,
-        this->channels_value,
-        this->duration_value,
-        this->nyquist_value,
-        this->file_size_value,
-        this->total_samples_value,
-        this->analysis_frames_value,
-        this->fft_size_value,
-        this->freq_resolution_value,
-        info);
+    this->file_type_value->SetLabel(wxEmptyString);
+    this->sample_rate_value->SetLabel(wxEmptyString);
+    this->bit_depth_value->SetLabel(wxEmptyString);
+    this->channels_value->SetLabel(wxEmptyString);
+    this->duration_value->SetLabel(wxEmptyString);
+    this->nyquist_value->SetLabel(wxEmptyString);
+    this->file_size_value->SetLabel(wxEmptyString);
+    this->total_samples_value->SetLabel(wxEmptyString);
+    this->analysis_frames_value->SetLabel(wxEmptyString);
+    this->fft_size_value->SetLabel(wxEmptyString);
+    this->freq_resolution_value->SetLabel(wxEmptyString);
 
     Layout();
     GetParent()->Layout();
@@ -229,20 +226,17 @@ void SpekInfoPanel::set_secondary_info(const SpekAudioInfo& info)
 
 void SpekInfoPanel::clear_secondary()
 {
-    SpekAudioInfo info;
-    fill_values(
-        this->file_type_value2,
-        this->sample_rate_value2,
-        this->bit_depth_value2,
-        this->channels_value2,
-        this->duration_value2,
-        this->nyquist_value2,
-        this->file_size_value2,
-        this->total_samples_value2,
-        this->analysis_frames_value2,
-        this->fft_size_value2,
-        this->freq_resolution_value2,
-        info);
+    this->file_type_value2->SetLabel(wxEmptyString);
+    this->sample_rate_value2->SetLabel(wxEmptyString);
+    this->bit_depth_value2->SetLabel(wxEmptyString);
+    this->channels_value2->SetLabel(wxEmptyString);
+    this->duration_value2->SetLabel(wxEmptyString);
+    this->nyquist_value2->SetLabel(wxEmptyString);
+    this->file_size_value2->SetLabel(wxEmptyString);
+    this->total_samples_value2->SetLabel(wxEmptyString);
+    this->analysis_frames_value2->SetLabel(wxEmptyString);
+    this->fft_size_value2->SetLabel(wxEmptyString);
+    this->freq_resolution_value2->SetLabel(wxEmptyString);
 
     this->secondary_title->Hide();
     this->file_type_value2->Hide();

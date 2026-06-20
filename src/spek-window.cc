@@ -8,6 +8,7 @@
 #include <wx/splitter.h>
 #include <wx/sstream.h>
 #include <wx/stattext.h>
+#include <wx/statusbr.h>
 
 // WX on WIN doesn't like it when pthread.h is included first.
 #include <pthread.h>
@@ -18,6 +19,7 @@
 #include "spek-export-dialog.h"
 #include "spek-info-panel.h"
 #include "spek-palette.h"
+#include "spek-platform.h"
 #include "spek-preferences-dialog.h"
 #include "spek-preferences.h"
 #include "spek-spectrogram.h"
@@ -65,6 +67,7 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(ID_VIEW_LINK_AXES, SpekWindow::on_link_axes)
     EVT_MENU_RANGE(ID_FFT_SIZE_BASE, ID_FFT_SIZE_BASE + 3, SpekWindow::on_fft_size)
     EVT_MENU_RANGE(ID_WINDOW_FUNCTION_BASE, ID_WINDOW_FUNCTION_BASE + 3, SpekWindow::on_window_function)
+    EVT_SIZE(SpekWindow::on_size)
     EVT_COMMAND(-1, SPEK_NOTIFY_EVENT, SpekWindow::on_notify)
     EVT_BUTTON(ID_QUEUE_REMOVE, SpekWindow::on_queue_remove)
     EVT_BUTTON(ID_QUEUE_CLEAR, SpekWindow::on_queue_clear)
@@ -104,7 +107,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
     menu_view_info(NULL), menu_view_queue(NULL), menu_view_compare(NULL),
     menu_view_fit_window(NULL), menu_view_link_axes(NULL),
-    info_sash_position(width * 2), queue_sash_position(220), path(path),
+    status_bar(NULL), info_sash_position(width * 2), info_panel_width(260),
+    queue_sash_position(220), path(path),
     secondary_path(wxEmptyString), pngpath(pngpath), cur_dir(wxEmptyString),
     description(wxEmptyString), active_queue_index(-1)
 {
@@ -114,6 +118,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
 #ifndef OS_OSX
     SetIcons(wxArtProvider::GetIconBundle(ART_SPEK, wxART_FRAME_ICON));
 #endif
+
+    SetMinSize(wxSize(700 * spek_platform_dpi_scale(), 500 * spek_platform_dpi_scale()));
 
     int initial_fft_bits = SpekPreferences::get().get_fft_bits();
     if (initial_fft_bits < 9) {
@@ -337,14 +343,18 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         NULL, this);
     this->compare_splitter = new wxSplitterWindow(this->splitter, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     this->compare_splitter->SetSashGravity(0.5);
+    this->status_bar = CreateStatusBar();
+
     this->spectrogram = new SpekSpectrogram(this->compare_splitter);
     this->spectrogram->set_fft_bits(initial_fft_bits);
     this->spectrogram->set_window_function((enum window_function)initial_window_function);
     this->spectrogram->set_palette((enum palette)initial_palette);
+    this->spectrogram->set_status_bar(this->status_bar);
     this->spectrogram2 = new SpekSpectrogram(this->compare_splitter);
     this->spectrogram2->set_fft_bits(initial_fft_bits);
     this->spectrogram2->set_window_function((enum window_function)initial_window_function);
     this->spectrogram2->set_palette((enum palette)initial_palette);
+    this->spectrogram2->set_status_bar(this->status_bar);
     this->spectrogram2->Hide();
     this->compare_splitter->Initialize(this->spectrogram);
     this->compare_splitter->SetMinimumPaneSize(100);
@@ -969,6 +979,28 @@ void SpekWindow::on_info_sash_changed(wxSplitterEvent&)
 {
     if (this->splitter && this->splitter->IsSplit()) {
         this->info_sash_position = this->splitter->GetSashPosition();
+        this->info_panel_width = this->splitter->GetSize().GetWidth() - this->info_sash_position;
+        if (this->info_panel_width < 260) {
+            this->info_panel_width = 260;
+        }
+    }
+}
+
+void SpekWindow::on_size(wxSizeEvent& event)
+{
+    event.Skip();
+    if (this->splitter && this->splitter->IsSplit()) {
+        this->CallAfter([this]() {
+            if (!this->splitter || !this->splitter->IsSplit()) {
+                return;
+            }
+            int splitter_width = this->splitter->GetSize().GetWidth();
+            int sash = splitter_width - this->info_panel_width;
+            if (sash < 260) {
+                sash = 260;
+            }
+            this->splitter->SetSashPosition(sash);
+        });
     }
 }
 
@@ -985,12 +1017,10 @@ void SpekWindow::update_info_panel_visibility()
 
     if (show) {
         if (!this->splitter->IsSplit()) {
-            int sash = this->info_sash_position;
-            int max_sash = this->splitter->GetSize().GetWidth() - 260;
+            int splitter_width = this->splitter->GetSize().GetWidth();
+            int sash = splitter_width - this->info_panel_width;
             if (sash < 260) {
                 sash = 260;
-            } else if (sash > max_sash) {
-                sash = max_sash;
             }
             this->splitter->SplitVertically(this->compare_splitter, this->info_panel, sash);
         }

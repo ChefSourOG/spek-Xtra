@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <wx/wx.h>
+#include <wx/statusbr.h>
 
 #include "spek-info-panel.h"
 #include "spek-palette.h"
@@ -34,6 +36,7 @@ public:
     void set_pan(int dx, int dy);
     void set_axes_linked(bool linked);
     bool get_axes_linked() const { return this->axes_linked; }
+    void set_status_bar(wxStatusBar *status_bar) { this->status_bar = status_bar; }
 
 private:
     void on_char(wxKeyEvent& evt);
@@ -44,7 +47,9 @@ private:
     void on_mouse_left_down(wxMouseEvent& evt);
     void on_mouse_motion(wxMouseEvent& evt);
     void on_mouse_left_up(wxMouseEvent& evt);
+    void on_mouse_leave(wxMouseEvent& evt);
     void render(wxDC& dc, int width, int height);
+    void update_readout(int mx, int my);
 
     void start();
     void stop();
@@ -88,6 +93,8 @@ private:
     enum palette palette;
     wxImage palette_image;
     wxImage image;
+    std::vector<float> image_data;
+    wxStatusBar *status_bar;
     int prev_width;
     int fft_bits;
     int urange;
