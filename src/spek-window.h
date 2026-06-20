@@ -38,6 +38,7 @@ private:
     void on_queue_clear(wxCommandEvent& event);
     void on_queue_context_menu(wxContextMenuEvent& event);
     void on_queue_open_secondary(wxCommandEvent& event);
+    void on_info_sash_changed(wxSplitterEvent& event);
     void populate_recent_files_menu();
     void update_info_panel_visibility();
     void update_info_panel_info();
@@ -56,8 +57,10 @@ private:
     SpekInfoPanel *info_panel;
     wxSplitterWindow *splitter;
     wxSplitterWindow *compare_splitter;
+    wxSplitterWindow *main_splitter;
     wxPanel *info_bar;
     wxPanel *queue_panel;
+    wxPanel *right_panel;
     wxListBox *queue_list;
     wxButton *queue_remove_btn;
     wxButton *queue_clear_btn;
@@ -67,6 +70,7 @@ private:
     wxMenuItem *menu_view_queue;
     wxMenuItem *menu_view_compare;
     int info_sash_position;
+    int queue_sash_position;
     wxString path;
     wxString secondary_path;
     wxString pngpath;

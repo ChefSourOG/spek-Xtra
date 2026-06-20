@@ -92,13 +92,13 @@ private:
 SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxString& pngpath) :
     wxFrame(NULL, -1, wxEmptyString, wxDefaultPosition, wxSize(width, height)),
     spectrogram(NULL), spectrogram2(NULL), info_panel(NULL), splitter(NULL),
-    compare_splitter(NULL), info_bar(NULL), queue_panel(NULL), queue_list(NULL),
-    queue_remove_btn(NULL), queue_clear_btn(NULL), menu_file_export(NULL),
-    menu_file_recent(NULL), menu_view_info(NULL), menu_view_queue(NULL),
-    menu_view_compare(NULL),
-    info_sash_position(width - 280), path(path), secondary_path(wxEmptyString),
-    pngpath(pngpath), cur_dir(wxEmptyString), description(wxEmptyString),
-    active_queue_index(-1)
+    compare_splitter(NULL), main_splitter(NULL), info_bar(NULL), queue_panel(NULL),
+    right_panel(NULL), queue_list(NULL), queue_remove_btn(NULL),
+    queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
+    menu_view_info(NULL), menu_view_queue(NULL), menu_view_compare(NULL),
+    info_sash_position(width - 280), queue_sash_position(220), path(path),
+    secondary_path(wxEmptyString), pngpath(pngpath), cur_dir(wxEmptyString),
+    description(wxEmptyString), active_queue_index(-1)
 {
     this->description = _("Spek - Acoustic Spectrum Analyser");
     SetTitle(this->description);
@@ -125,6 +125,10 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     }
 
     bool initial_show_queue = SpekPreferences::get().get_show_queue();
+
+    this->main_splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    this->main_splitter->SetMinimumPaneSize(150);
+    this->main_splitter->SetSashGravity(0.0);
 
     wxMenuBar *menu = new wxMenuBar();
 
@@ -227,6 +231,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     );
     toolbar->Realize();
 
+    this->right_panel = new wxPanel(this->main_splitter);
+
     wxBoxSizer *palette_sizer = new wxBoxSizer(wxHORIZONTAL);
     const char *palette_labels[] = {
         N_("Spectrum"),
@@ -240,7 +246,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     };
     for (int i = 0; i < PALETTE_COUNT; ++i) {
         wxBitmapButton *btn = new wxBitmapButton(
-            this, ID_PALETTE_BASE + i,
+            this->right_panel, ID_PALETTE_BASE + i,
             spek_palette_bitmap((enum palette)i, 32, 16),
             wxDefaultPosition, wxSize(40, 24),
             wxBU_AUTODRAW | wxBORDER_RAISED);
@@ -254,7 +260,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     palette_sizer->AddStretchSpacer(1);
 
     // wxInfoBar is too limited, construct a custom one.
-    this->info_bar = new wxPanel(this);
+    this->info_bar = new wxPanel(this->right_panel);
     this->info_bar->Hide();
     this->info_bar->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
     this->info_bar->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
@@ -273,7 +279,12 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     info_sizer->Add(button, 0, wxALIGN_CENTER_VERTICAL);
     this->info_bar->SetSizer(info_sizer);
 
-    this->queue_panel = new wxPanel(this);
+    this->queue_panel = new wxPanel(this->main_splitter);
+    this->queue_panel->SetMinSize(wxSize(150, -1));
+    if (!initial_show_queue) {
+        this->queue_panel->Hide();
+    }
+
     wxBoxSizer *queue_sizer = new wxBoxSizer(wxVERTICAL);
     wxStaticText *queue_label = new wxStaticText(this->queue_panel, -1, _("&Queue"));
     queue_sizer->Add(queue_label, 0, wxALL, 4);
@@ -294,12 +305,13 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     queue_btn_sizer->Add(this->queue_clear_btn, 1, wxEXPAND | wxLEFT, 2);
     queue_sizer->Add(queue_btn_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 4);
     this->queue_panel->SetSizer(queue_sizer);
-    this->queue_panel->SetMinSize(wxSize(180, -1));
-    if (!initial_show_queue) {
-        this->queue_panel->Hide();
-    }
 
-    this->splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    this->splitter = new wxSplitterWindow(this->right_panel, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    this->splitter->SetSashGravity(1.0);
+    this->splitter->Connect(
+        wxEVT_SPLITTER_SASH_POS_CHANGED,
+        wxSplitterEventHandler(SpekWindow::on_info_sash_changed),
+        NULL, this);
     this->compare_splitter = new wxSplitterWindow(this->splitter, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     this->compare_splitter->SetSashGravity(0.5);
     this->spectrogram = new SpekSpectrogram(this->compare_splitter);
@@ -320,10 +332,16 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     right_sizer->Add(this->info_bar, 0, wxEXPAND);
     right_sizer->Add(palette_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 4);
     right_sizer->Add(this->splitter, 1, wxEXPAND);
+    this->right_panel->SetSizer(right_sizer);
 
-    wxBoxSizer *main_sizer = new wxBoxSizer(wxHORIZONTAL);
-    main_sizer->Add(this->queue_panel, 0, wxEXPAND | wxALL, 4);
-    main_sizer->Add(right_sizer, 1, wxEXPAND);
+    if (initial_show_queue) {
+        this->main_splitter->SplitVertically(this->queue_panel, this->right_panel, this->queue_sash_position);
+    } else {
+        this->main_splitter->Initialize(this->right_panel);
+    }
+
+    wxBoxSizer *main_sizer = new wxBoxSizer(wxVERTICAL);
+    main_sizer->Add(this->main_splitter, 1, wxEXPAND);
 
     SetSizer(main_sizer);
 
@@ -885,6 +903,13 @@ void SpekWindow::on_queue_open_secondary(wxCommandEvent&)
     }
 }
 
+void SpekWindow::on_info_sash_changed(wxSplitterEvent&)
+{
+    if (this->splitter && this->splitter->IsSplit()) {
+        this->info_sash_position = this->splitter->GetSashPosition();
+    }
+}
+
 void SpekWindow::update_info_panel_visibility()
 {
     bool show = SpekPreferences::get().get_show_info_panel();
@@ -922,9 +947,19 @@ void SpekWindow::update_queue_visibility()
         this->menu_view_queue->Check(show);
     }
 
-    if (this->queue_panel) {
-        this->queue_panel->Show(show);
-        this->Layout();
+    if (!this->main_splitter || !this->queue_panel || !this->right_panel) {
+        return;
+    }
+
+    if (show) {
+        if (!this->main_splitter->IsSplit()) {
+            this->main_splitter->SplitVertically(this->queue_panel, this->right_panel, this->queue_sash_position);
+        }
+    } else {
+        if (this->main_splitter->IsSplit()) {
+            this->queue_sash_position = this->main_splitter->GetSashPosition();
+            this->main_splitter->Unsplit(this->queue_panel);
+        }
     }
 }
 
