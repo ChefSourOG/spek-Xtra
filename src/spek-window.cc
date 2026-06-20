@@ -43,6 +43,7 @@ wxDEFINE_EVENT(SPEK_NOTIFY_EVENT, wxCommandEvent);
 #define ID_OPEN_SECONDARY (wxID_HIGHEST + 111)
 #define ID_VIEW_FIT_WINDOW (wxID_HIGHEST + 112)
 #define ID_VIEW_LINK_AXES (wxID_HIGHEST + 113)
+#define ID_VIEW_LOG_FREQ (wxID_HIGHEST + 114)
 #define ID_QUEUE_OPEN_PRIMARY (wxID_HIGHEST + 94)
 #define ID_QUEUE_OPEN_SECONDARY (wxID_HIGHEST + 93)
 #define MAX_RECENT_FILES 10
@@ -65,6 +66,7 @@ BEGIN_EVENT_TABLE(SpekWindow, wxFrame)
     EVT_MENU(ID_VIEW_FIT_WINDOW, SpekWindow::on_fit_window)
     EVT_TOOL(ID_VIEW_FIT_WINDOW, SpekWindow::on_fit_window)
     EVT_MENU(ID_VIEW_LINK_AXES, SpekWindow::on_link_axes)
+    EVT_MENU(ID_VIEW_LOG_FREQ, SpekWindow::on_log_freq)
     EVT_MENU_RANGE(ID_FFT_SIZE_BASE, ID_FFT_SIZE_BASE + 3, SpekWindow::on_fft_size)
     EVT_MENU_RANGE(ID_WINDOW_FUNCTION_BASE, ID_WINDOW_FUNCTION_BASE + 3, SpekWindow::on_window_function)
     EVT_SIZE(SpekWindow::on_size)
@@ -107,7 +109,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     queue_clear_btn(NULL), menu_file_export(NULL), menu_file_recent(NULL),
     menu_view_info(NULL), menu_view_queue(NULL), menu_view_compare(NULL),
     menu_view_fit_window(NULL), menu_view_link_axes(NULL),
-    status_bar(NULL), info_sash_position(width * 2), info_panel_width(260),
+    menu_view_log_freq(NULL), status_bar(NULL), info_sash_position(width * 2),
+    info_panel_width(260),
     queue_sash_position(220), path(path),
     secondary_path(wxEmptyString), pngpath(pngpath), cur_dir(wxEmptyString),
     description(wxEmptyString), active_queue_index(-1)
@@ -139,6 +142,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     }
 
     bool initial_show_queue = SpekPreferences::get().get_show_queue();
+    bool initial_log_freq = SpekPreferences::get().get_log_freq();
 
     this->main_splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     this->main_splitter->SetMinimumPaneSize(150);
@@ -187,6 +191,11 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
         wxEmptyString, wxITEM_CHECK);
     menu_view->Append(this->menu_view_link_axes);
     this->menu_view_link_axes->Check(true);
+    this->menu_view_log_freq = new wxMenuItem(
+        menu_view, ID_VIEW_LOG_FREQ, _("&Logarithmic Frequency Scale"),
+        wxEmptyString, wxITEM_CHECK);
+    menu_view->Append(this->menu_view_log_freq);
+    this->menu_view_log_freq->Check(initial_log_freq);
     menu_view->AppendSeparator();
 
     wxMenu *menu_fft_size = new wxMenu();
@@ -349,11 +358,13 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     this->spectrogram->set_fft_bits(initial_fft_bits);
     this->spectrogram->set_window_function((enum window_function)initial_window_function);
     this->spectrogram->set_palette((enum palette)initial_palette);
+    this->spectrogram->set_log_freq(initial_log_freq);
     this->spectrogram->set_status_bar(this->status_bar);
     this->spectrogram2 = new SpekSpectrogram(this->compare_splitter);
     this->spectrogram2->set_fft_bits(initial_fft_bits);
     this->spectrogram2->set_window_function((enum window_function)initial_window_function);
     this->spectrogram2->set_palette((enum palette)initial_palette);
+    this->spectrogram2->set_log_freq(initial_log_freq);
     this->spectrogram2->set_status_bar(this->status_bar);
     this->spectrogram2->Hide();
     this->compare_splitter->Initialize(this->spectrogram);
@@ -886,6 +897,18 @@ void SpekWindow::on_link_axes(wxCommandEvent& event)
     }
     if (this->spectrogram2) {
         this->spectrogram2->set_axes_linked(linked);
+    }
+}
+
+void SpekWindow::on_log_freq(wxCommandEvent& event)
+{
+    bool log_freq = event.IsChecked();
+    SpekPreferences::get().set_log_freq(log_freq);
+    if (this->spectrogram) {
+        this->spectrogram->set_log_freq(log_freq);
+    }
+    if (this->spectrogram2) {
+        this->spectrogram2->set_log_freq(log_freq);
     }
 }
 

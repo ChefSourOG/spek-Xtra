@@ -81,6 +81,7 @@ SpekSpectrogram::SpekSpectrogram(wxWindow *parent) :
     viewport_width(1.0),
     viewport_height(1.0),
     axes_linked(true),
+    log_freq(false),
     dragging(false),
     drag_start(0, 0),
     drag_last(0, 0),
@@ -468,9 +469,49 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
         if (src_w < 1) src_w = 1;
         if (src_h < 1) src_h = 1;
 
-        wxImage sub = this->image.GetSubImage(wxRect(src_x, src_y, src_w, src_h));
-        wxBitmap bmp(sub.Scale(plot_w, plot_h));
-        dc.DrawBitmap(bmp, LPAD, TPAD);
+        // Draw the visible portion of the spectrogram.
+        if (this->log_freq) {
+            // Logarithmic frequency mapping.
+            double nyquist = this->sample_rate / 2.0;
+            double freq_min = this->viewport_y * nyquist;
+            double freq_max = (this->viewport_y + this->viewport_height) * nyquist;
+            double log_freq_min = fmax(freq_min, nyquist / (img_h - 1));
+
+            if (log_freq_min < freq_max) {
+                double log_ratio = log(freq_max / log_freq_min);
+                wxImage output(plot_w, plot_h);
+                unsigned char *src = this->image.GetData();
+                unsigned char *dst = output.GetData();
+
+                for (int y = 0; y < plot_h; ++y) {
+                    double t = (plot_h > 1) ? 1.0 - (double)y / (plot_h - 1) : 1.0;
+                    double freq = log_freq_min * exp(log_ratio * t);
+                    int src_y = (int)round((1.0 - freq / nyquist) * (img_h - 1));
+                    src_y = fmax(0, fmin(img_h - 1, src_y));
+
+                    for (int x = 0; x < plot_w; ++x) {
+                        double src_xd = this->viewport_x * (img_w - 1) +
+                            (double)x / (plot_w > 1 ? plot_w - 1 : 1) *
+                            this->viewport_width * (img_w - 1);
+                        int src_x = (int)round(src_xd);
+                        src_x = fmax(0, fmin(img_w - 1, src_x));
+                        int si = (src_y * img_w + src_x) * 3;
+                        int di = (y * plot_w + x) * 3;
+                        dst[di] = src[si];
+                        dst[di + 1] = src[si + 1];
+                        dst[di + 2] = src[si + 2];
+                    }
+                }
+
+                wxBitmap bmp(output);
+                dc.DrawBitmap(bmp, LPAD, TPAD);
+            }
+        } else {
+            // Linear frequency mapping.
+            wxImage sub = this->image.GetSubImage(wxRect(src_x, src_y, src_w, src_h));
+            wxBitmap bmp(sub.Scale(plot_w, plot_h));
+            dc.DrawBitmap(bmp, LPAD, TPAD);
+        }
 
         // File name.
         // Checking prefs can probably be solved differently.
@@ -524,25 +565,56 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
 
         if (this->sample_rate > 0) {
             // Frequency ruler.
-            double freq = this->sample_rate / 2.0;
-            double freq_min = this->viewport_y * freq;
-            double freq_max = (this->viewport_y + this->viewport_height) * freq;
-            int freq_factors[] = {1000, 2000, 5000, 10000, 20000, 0};
-            SpekRuler freq_ruler(
-                LPAD,
-                TPAD,
-                SpekRuler::LEFT,
-                // TRANSLATORS: keep "00" unchanged, it's used to calc the text width
-                _("00 kHz"),
-                freq_factors,
-                (int)freq_min,
-                (int)freq_max,
-                3.0,
-                plot_h / (freq_max - freq_min),
-                0.0,
-                freq_formatter
-                );
-            freq_ruler.draw(dc);
+            double nyquist = this->sample_rate / 2.0;
+            double freq_min = this->viewport_y * nyquist;
+            double freq_max = (this->viewport_y + this->viewport_height) * nyquist;
+
+            if (this->log_freq) {
+                double log_freq_min = fmax(freq_min, nyquist / (img_h - 1));
+                if (log_freq_min < freq_max) {
+                    const int log_steps[] = {1, 2, 5};
+                    int prev_label_bottom = -1000;
+                    for (int decade = 1; decade <= (int)ceil(freq_max); decade *= 10) {
+                        for (size_t i = 0; i < WXSIZEOF(log_steps); ++i) {
+                            int tick = decade * log_steps[i];
+                            if (tick < log_freq_min || tick > freq_max) {
+                                continue;
+                            }
+                            double t = log((double)tick / log_freq_min) /
+                                log(freq_max / log_freq_min);
+                            int py = (int)round((1.0 - t) * (plot_h - 1));
+                            wxString label = format_freq(tick);
+                            wxSize size = dc.GetTextExtent(label);
+                            int lw = size.GetWidth();
+                            int lh = size.GetHeight();
+                            int label_y = TPAD + py - lh / 2;
+                            if (label_y < prev_label_bottom + 2) {
+                                continue;
+                            }
+                            dc.DrawText(label, LPAD - lw - 10, label_y);
+                            dc.DrawLine(LPAD, TPAD + py, LPAD - 4, TPAD + py);
+                            prev_label_bottom = label_y + lh;
+                        }
+                    }
+                }
+            } else {
+                int freq_factors[] = {1000, 2000, 5000, 10000, 20000, 0};
+                SpekRuler freq_ruler(
+                    LPAD,
+                    TPAD,
+                    SpekRuler::LEFT,
+                    // TRANSLATORS: keep "00" unchanged, it's used to calc the text width
+                    _("00 kHz"),
+                    freq_factors,
+                    (int)freq_min,
+                    (int)freq_max,
+                    3.0,
+                    plot_h / (freq_max - freq_min),
+                    0.0,
+                    freq_formatter
+                    );
+                freq_ruler.draw(dc);
+            }
         }
     }
 
@@ -733,6 +805,14 @@ void SpekSpectrogram::set_axes_linked(bool linked)
     this->axes_linked = linked;
 }
 
+void SpekSpectrogram::set_log_freq(bool log_freq)
+{
+    if (this->log_freq != log_freq) {
+        this->log_freq = log_freq;
+        this->Refresh();
+    }
+}
+
 int SpekSpectrogram::calc_image_samples() const
 {
     wxSize size = GetClientSize();
@@ -811,7 +891,24 @@ void SpekSpectrogram::on_mouse_wheel(wxMouseEvent& evt)
 
     double factor = (rotation > 0.0) ? 1.1 : 1.0 / 1.1;
     double center_t = this->viewport_x + (double)mx / plot_w * this->viewport_width;
-    double center_f = this->viewport_y + (double)my / plot_h * this->viewport_height;
+    double center_f;
+
+    if (this->log_freq) {
+        int img_h = this->image.GetHeight();
+        double nyquist = this->sample_rate / 2.0;
+        double freq_min = this->viewport_y * nyquist;
+        double freq_max = (this->viewport_y + this->viewport_height) * nyquist;
+        double log_freq_min = fmax(freq_min, nyquist / (img_h - 1));
+        if (log_freq_min < freq_max) {
+            double t = 1.0 - (double)my / (plot_h > 1 ? plot_h - 1 : 1);
+            double freq_hz = log_freq_min * pow(freq_max / log_freq_min, t);
+            center_f = freq_hz / nyquist;
+        } else {
+            center_f = this->viewport_y;
+        }
+    } else {
+        center_f = this->viewport_y + (double)my / plot_h * this->viewport_height;
+    }
 
     bool zoom_x, zoom_y;
     if (evt.ControlDown()) {
@@ -912,13 +1009,27 @@ void SpekSpectrogram::update_readout(int mx, int my)
     double time_norm = this->viewport_x + (double)mx / plot_w * this->viewport_width;
     double time_sec = time_norm * this->duration;
 
-    double freq_norm = this->viewport_y + (1.0 - (double)my / plot_h) * this->viewport_height;
-    double freq_hz = freq_norm * this->sample_rate / 2.0;
+    double nyquist = this->sample_rate / 2.0;
+    double freq_min = this->viewport_y * nyquist;
+    double freq_max = (this->viewport_y + this->viewport_height) * nyquist;
+    double freq_hz;
+
+    if (this->log_freq) {
+        double log_freq_min = fmax(freq_min, nyquist / (img_h - 1));
+        if (log_freq_min < freq_max) {
+            double t = 1.0 - (double)my / (plot_h > 1 ? plot_h - 1 : 1);
+            freq_hz = log_freq_min * pow(freq_max / log_freq_min, t);
+        } else {
+            freq_hz = freq_min;
+        }
+    } else {
+        double freq_norm = this->viewport_y + (1.0 - (double)my / plot_h) * this->viewport_height;
+        freq_hz = freq_norm * nyquist;
+    }
 
     double img_col_d = this->viewport_x * (img_w - 1) +
         (double)mx / plot_w * this->viewport_width * (img_w - 1);
-    double img_row_d = (1.0 - this->viewport_y - this->viewport_height) * (img_h - 1) +
-        (double)my / plot_h * this->viewport_height * (img_h - 1);
+    double img_row_d = (1.0 - freq_hz / nyquist) * (img_h - 1);
     int img_col = (int)round(fmax(0.0, fmin((double)(img_w - 1), img_col_d)));
     int img_row = (int)round(fmax(0.0, fmin((double)(img_h - 1), img_row_d)));
 

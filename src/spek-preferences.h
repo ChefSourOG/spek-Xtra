@@ -38,6 +38,8 @@ public:
     void clear_queue();
     bool get_show_queue();
     void set_show_queue(bool value);
+    bool get_log_freq();
+    void set_log_freq(bool value);
 
 private:
     SpekPreferences();

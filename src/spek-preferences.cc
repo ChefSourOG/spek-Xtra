@@ -269,3 +269,16 @@ void SpekPreferences::set_show_queue(bool value)
     this->config->Write("/general/showqueue", value);
     this->config->Flush();
 }
+
+bool SpekPreferences::get_log_freq()
+{
+    bool result = false;
+    this->config->Read("/view/logfreq", &result);
+    return result;
+}
+
+void SpekPreferences::set_log_freq(bool value)
+{
+    this->config->Write("/view/logfreq", value);
+    this->config->Flush();
+}

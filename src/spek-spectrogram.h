@@ -36,6 +36,8 @@ public:
     void set_pan(int dx, int dy);
     void set_axes_linked(bool linked);
     bool get_axes_linked() const { return this->axes_linked; }
+    void set_log_freq(bool log_freq);
+    bool get_log_freq() const { return this->log_freq; }
     void set_status_bar(wxStatusBar *status_bar) { this->status_bar = status_bar; }
 
 private:
@@ -104,6 +106,7 @@ private:
     // x=time (0=start, 1=end), y=frequency (0=DC/bottom, 1=Nyquist/top).
     double viewport_x, viewport_y, viewport_width, viewport_height;
     bool axes_linked;
+    bool log_freq;
     bool dragging;
     wxPoint drag_start;
     wxPoint drag_last;
