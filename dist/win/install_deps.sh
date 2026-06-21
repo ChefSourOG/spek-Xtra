@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xeu
 
-# This script will compile and install the dependencies which are needed to build spek.exe.
+# This script will compile and install the dependencies which are needed to build spek-xtra.exe.
 # Check README.md in this directory for instructions.
 
 # Adjust these variables if necessary.

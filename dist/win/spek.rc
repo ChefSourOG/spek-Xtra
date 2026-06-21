@@ -5,3 +5,27 @@ save ICON "save.ico"
 close ICON "close.ico"
 
 1 24 "spek.manifest"
+
+1 VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEOS 0x40004
+FILETYPE 0x1
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904b0"
+        {
+            VALUE "FileDescription", "Spek-Xtra Acoustic Spectrum Analyzer"
+            VALUE "FileVersion", "1.0.0"
+            VALUE "InternalName", "spek-xtra"
+            VALUE "OriginalFilename", "spek-xtra.exe"
+            VALUE "ProductName", "Spek-Xtra"
+            VALUE "ProductVersion", "1.0.0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1200
+    }
+}

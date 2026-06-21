@@ -103,7 +103,7 @@ bool Spek::OnInit()
     }
     if (parser.Found("version")) {
         // TRANSLATORS: the %s is the package version.
-        wxPrintf(_("Spek version %s"), PACKAGE_VERSION);
+        wxPrintf(_("Spek-Xtra version %s"), PACKAGE_VERSION);
         wxPrintf("\n");
         this->quit = true;
         return true;

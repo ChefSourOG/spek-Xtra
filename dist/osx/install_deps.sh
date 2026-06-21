@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xeu
 
-# This script will compile and install the dependencies which are needed to build Spek.app.
+# This script will compile and install the dependencies which are needed to build Spek-Xtra.app.
 # Check README.md in this directory for instructions.
 
 # Adjust these variables if necessary.
@@ -33,7 +33,7 @@ export MACOSX_DEPLOYMENT_TARGET
 install_homebrew_deps()
 {
     brew --version >/dev/null 2>&1 || {
-        echo "Building Spek.app requires Homebrew."
+        echo "Building Spek-Xtra.app requires Homebrew."
         echo "Follow the instructions at [https://brew.sh] to install Homebrew."
         exit 1
     }

@@ -6,7 +6,7 @@ then
 
 !!! DO NOT RUN THIS SCRIPT ON YOUR COMPUTER !!!
 -----------------------------------------------
-This script is used to build Spek-X Apple Silicon packages on Intel macOS CI.
+This script is used to build Spek-Xtra Apple Silicon packages on Intel macOS CI.
 It will break your dependencies if not executed in a container.
 
 EOF
@@ -19,7 +19,7 @@ LOCALEDIR="/usr/local/share/locale/"
 
 cd $(dirname $0)/../../..
 
-rm -f src/spek
+rm -f src/spek-xtra
 
 sed 's/ --host=.*"/"/' "$HOMEBREW_PREFIX"/share/wx/*/aclocal/wxwin.m4 > wxwin.m4
 echo "m4_include([wxwin.m4])" > acinclude.m4
@@ -27,27 +27,27 @@ echo "m4_include([wxwin.m4])" > acinclude.m4
 ./autogen.sh CC='clang -arch arm64' CXX='clang++ -arch arm64' --host=arm64-apple-darwin && make -j2 || exit 1
 
 cd dist/osx
-rm -fr Spek.app
-mkdir -p Spek.app/Contents/MacOS
-mkdir -p Spek.app/Contents/Frameworks
-mkdir -p Spek.app/Contents/Resources
-mv ../../src/spek Spek.app/Contents/MacOS/Spek
-cp Info.plist Spek.app/Contents/
-cp Spek.icns Spek.app/Contents/Resources/
-cp *.png Spek.app/Contents/Resources/
-cp ../../LICENCE.md Spek.app/Contents/Resources/
-cp ../../README.md Spek.app/Contents/Resources/
-mkdir Spek.app/Contents/Resources/lic
-cp ../../lic/* Spek.app/Contents/Resources/lic/
+rm -fr "Spek-Xtra.app"
+mkdir -p "Spek-Xtra.app/Contents/MacOS"
+mkdir -p "Spek-Xtra.app/Contents/Frameworks"
+mkdir -p "Spek-Xtra.app/Contents/Resources"
+mv ../../src/spek-xtra "Spek-Xtra.app/Contents/MacOS/Spek-Xtra"
+cp Info.plist "Spek-Xtra.app/Contents/"
+cp Spek.icns "Spek-Xtra.app/Contents/Resources/"
+cp *.png "Spek-Xtra.app/Contents/Resources/"
+cp ../../LICENCE.md "Spek-Xtra.app/Contents/Resources/"
+cp ../../README.md "Spek-Xtra.app/Contents/Resources/"
+mkdir "Spek-Xtra.app/Contents/Resources/lic"
+cp ../../lic/* "Spek-Xtra.app/Contents/Resources/lic/"
 
 for lang in $LANGUAGES; do
-    mkdir -p Spek.app/Contents/Resources/"$lang".lproj
-    cp -v ../../po/"$lang".gmo Spek.app/Contents/Resources/"$lang".lproj/spek.mo
-    cp -v "$LOCALEDIR""$lang"/LC_MESSAGES/wxstd*.mo Spek.app/Contents/Resources/"$lang".lproj/wxstd.mo
+    mkdir -p "Spek-Xtra.app/Contents/Resources/$lang.lproj"
+    cp -v ../../po/"$lang".gmo "Spek-Xtra.app/Contents/Resources/$lang.lproj/spek.mo"
+    cp -v "$LOCALEDIR""$lang"/LC_MESSAGES/wxstd*.mo "Spek-Xtra.app/Contents/Resources/$lang.lproj/wxstd.mo"
 done
-mkdir -p Spek.app/Contents/Resources/en.lproj
+mkdir -p "Spek-Xtra.app/Contents/Resources/en.lproj"
 
-BINS="Spek.app/Contents/MacOS/Spek"
+BINS="Spek-Xtra.app/Contents/MacOS/Spek-Xtra"
 while [ ! -z "$BINS" ]; do
     NEWBINS=""
     for bin in $BINS; do
@@ -57,12 +57,12 @@ while [ ! -z "$BINS" ]; do
             reallib=$(realpath $lib)
             libname=$(basename $reallib)
             install_name_tool -change $lib @executable_path/../Frameworks/$libname $bin
-            if [ ! -f Spek.app/Contents/Frameworks/$libname ]; then
+            if [ ! -f "Spek-Xtra.app/Contents/Frameworks/$libname" ]; then
                 echo "\tBundling $reallib."
-                cp $reallib Spek.app/Contents/Frameworks/
-                chmod +w Spek.app/Contents/Frameworks/$libname
-                install_name_tool -id @executable_path/../Frameworks/$libname Spek.app/Contents/Frameworks/$libname
-                NEWBINS="$NEWBINS Spek.app/Contents/Frameworks/$libname"
+                cp $reallib "Spek-Xtra.app/Contents/Frameworks/"
+                chmod +w "Spek-Xtra.app/Contents/Frameworks/$libname"
+                install_name_tool -id @executable_path/../Frameworks/$libname "Spek-Xtra.app/Contents/Frameworks/$libname"
+                NEWBINS="$NEWBINS Spek-Xtra.app/Contents/Frameworks/$libname"
             fi
         done
     done
@@ -70,11 +70,11 @@ while [ ! -z "$BINS" ]; do
 done
 
 # Sign the app
-codesign -fs - ./Spek.app --deep
+codesign -fs - "./Spek-Xtra.app" --deep
 
 # Create a gzip tar archive
-rm -f Spek.tgz
-tar cvzf Spek.tgz ./Spek.app
+rm -f Spek-Xtra.tgz
+tar cvzf Spek-Xtra.tgz "./Spek-Xtra.app"
 
 # Clean up
 cd ../..

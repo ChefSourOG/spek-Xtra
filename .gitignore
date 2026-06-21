@@ -20,9 +20,9 @@ data/spek.desktop
 data/spek.desktop.in
 depcomp
 dist/osx/Info.plist
-dist/osx/Spek.app
-dist/osx/Spek.dmg
-dist/win/Spek
+dist/osx/Spek-Xtra.app
+dist/osx/Spek-Xtra.dmg
+dist/win/Spek-Xtra
 dist/win/spek.wxs
 dist/win/tests
 env
@@ -32,7 +32,7 @@ intltool-merge.in
 intltool-update.in
 libtool
 ltmain.sh
-man/spek.1
+man/spek-xtra.1
 missing
 mkinstalldirs
 omf.make
@@ -42,7 +42,7 @@ po/POTFILES
 po/stamp-it
 src/*.stamp
 src/.libs
-src/spek
+src/spek-xtra
 stamp-h1
 tests/.libs
 tests/perf
@@ -50,3 +50,4 @@ tests/samples/perf.wav
 tests/test
 web/version
 xmldocs.make
+.git-backup/

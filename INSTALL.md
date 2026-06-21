@@ -7,7 +7,7 @@
 Download section offers two packages: a ZIP archive for x64 processors and a
 ZIP archive for Arm64 processors. 32-bit Windows is not supported.
 
-Download the ZIP archive, unpack it somewhere on your disk and run `spek.exe`.
+Download the ZIP archive, unpack it somewhere on your disk and run `spek-xtra.exe`.
 
 ## macOS
 
@@ -20,7 +20,7 @@ Download and unpack the TGZ archive, then drag the Spek icon to Applications.
 
 ### Binary packages
 
-Spek-X
+Spek-Xtra
  * Debian (deb-multimedia): [spek-x](https://deb-multimedia.org/pool/main/s/spek-x-dmo/), Tsinghua mirror: [spek-x](https://mirrors.tuna.tsinghua.edu.cn/debian-multimedia/pool/main/s/spek-x-dmo/)
 
 Original Spek (Outdated)
@@ -45,7 +45,7 @@ need development packages: `libwxgtk3.0-dev`, `wx-common`, `libavcodec-dev` and
 
 To start Spek, run:
 
-    src/spek
+    src/spek-xtra
 
 Or install it with:
 

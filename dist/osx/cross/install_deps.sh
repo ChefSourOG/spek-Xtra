@@ -6,7 +6,7 @@ then
 
 !!! DO NOT RUN THIS SCRIPT ON YOUR COMPUTER !!!
 -----------------------------------------------
-This script is used to build Spek-X Apple Silicon packages on Intel macOS CI.
+This script is used to build Spek-Xtra Apple Silicon packages on Intel macOS CI.
 It will break your dependencies if not executed in a container.
 
 EOF

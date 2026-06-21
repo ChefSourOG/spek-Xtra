@@ -1,9 +1,12 @@
-# Spek-X Agent Guide
+# Spek-Xtra Agent Guide
 
-This file is for AI coding agents working on the Spek-X project. Spek-X is an acoustic spectrum analyser, a fork of [Spek-alternative](https://github.com/withmorten/spek-alternative), originally derived from [Spek](https://github.com/alexkay/spek).
+The project source and full agent guide are located at the repository root.
 
-- Version: 0.9.4
-- Repository: <https://github.com/MikeWang000000/spek-X>
+This file is for AI coding agents working on the Spek-Xtra project. Spek-Xtra is an acoustic spectrum analyser, a fork of [Spek-alternative](https://github.com/withmorten/spek-alternative), originally derived from [Spek](https://github.com/alexkay/spek).
+
+- Version: 1.0.0
+- Repository: <https://github.com/ChefSourOG/spek-Xtra.git>
+- Upstream: <https://github.com/MikeWang000000/spek-X>
 - License: GNU General Public License v3 (see `lic/GPL`)
 
 ## Technology Stack
@@ -22,7 +25,7 @@ This file is for AI coding agents working on the Spek-X project. Spek-X is an ac
 ## Project Structure
 
 ```
-spek-X-main/
+.
 ├── configure.ac              # Autotools project definition
 ├── Makefile.am               # Top-level Automake file
 ├── autogen.sh                # Bootstrap script
@@ -61,7 +64,7 @@ spek-X-main/
 `src/Makefile.am` builds:
 
 - `libspek.a` — core engine (audio, FFT, palette, pipeline, utils), linked against FFmpeg.
-- `spek` — GUI binary, built from the remaining sources plus `libspek.a` and wxWidgets.
+- `spek-xtra` — GUI binary, built from the remaining sources plus `libspek.a` and wxWidgets.
 
 ## Build and Test Commands
 
@@ -83,7 +86,7 @@ sudo apt install g++ make pkg-config libtool intltool \
 ```bash
 ./autogen.sh
 make
-src/spek                    # run uninstalled
+src/spek-xtra               # run uninstalled
 sudo make install           # system install
 ```
 
@@ -106,10 +109,10 @@ make check
 
 ### Headless Export
 
-Spek-X supports a command-line export mode:
+Spek-Xtra supports a command-line export mode:
 
 ```bash
-spek input.wav output.png [width] [height]
+spek-xtra input.wav output.png [width] [height]
 ```
 
 ## Testing Strategy
@@ -159,7 +162,7 @@ Constants of note:
 - Platform-specific loading:
   - Unix: standard filesystem `.mo` files.
   - Windows: `wxResourceTranslationsLoader` loads MOs embedded as resources.
-  - macOS: `po/<lang>.gmo` is copied into `Spek.app/Contents/Resources/<lang>.lproj/spek.mo`.
+  - macOS: `po/<lang>.gmo` is copied into `Spek-Xtra.app/Contents/Resources/<lang>.lproj/spek.mo`.
 
 ## Deployment and Packaging
 
@@ -167,13 +170,13 @@ Constants of note:
 
 - `data/spek.desktop.in.in` is processed via intltool into `data/spek.desktop`.
 - Hicolor icons are installed from `data/icons/` (16×16 to 48×48 plus scalable).
-- Man page: `man/spek.1`.
+- Man page: `man/spek-xtra.1`.
 - Debian packaging files are under `dist/debian/`; CI builds a `.deb` with `dpkg-deb --build dist/debian/spek-x`.
 
 ### Windows
 
 - `dist/win/install_deps.sh` builds static wxWidgets 3.2.6 and FFmpeg 7.1 from source in MSYS2.
-- `dist/win/bundle.sh` produces a single statically-linked `spek.exe` and a ZIP archive at `dist/win/Spek/Spek.zip`.
+- `dist/win/bundle.sh` produces a single statically-linked `spek-xtra.exe` and a ZIP archive at `dist/win/Spek-Xtra/Spek-Xtra.zip`.
 - `dist/win/spek.rc` embeds icons and manifest; `dist/win/compile-rc.py` embeds `.gmo` translations as resources.
 - `dist/win/spek.wxs.in` is a WiX source for an MSI installer but is not built in CI.
 
@@ -181,7 +184,7 @@ Constants of note:
 
 - `dist/osx/install_deps.sh` and `dist/osx/bundle.sh` build wxWidgets with CMake and FFmpeg as shared libraries per architecture.
 - `dist/osx/bundle_universal.sh` merges `x86_64` and `arm64` binaries with `lipo`.
-- Output archives: `Spek.x86_64.tgz`, `Spek.arm64.tgz`, `Spek.tgz`.
+- Output archives: `Spek-Xtra.x86_64.tgz`, `Spek-Xtra.arm64.tgz`, `Spek-Xtra.tgz`.
 
 ## CI/CD
 
@@ -198,7 +201,7 @@ Constants of note:
 
 ## Security Considerations
 
-- Spek-X decodes arbitrary audio files via FFmpeg. Ensure FFmpeg is kept up to date to benefit from security fixes in bundled dependencies.
+- Spek-Xtra decodes arbitrary audio files via FFmpeg. Ensure FFmpeg is kept up to date to benefit from security fixes in bundled dependencies.
 - The Windows build creates a single statically-linked executable; verify that all statically linked libraries are from trusted sources and are current.
 - The macOS bundle copies shared libraries into the app; use `install_name_tool` and codesigning consistently.
 - Do not enable the legacy `SPEK_CHECK_VERSION` update-check feature without reviewing its network behaviour.

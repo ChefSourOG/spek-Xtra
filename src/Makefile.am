@@ -23,9 +23,9 @@ libspek_a_CXXFLAGS = \
 	$(AVUTIL_CFLAGS) \
 	$(WX_CXXFLAGS_ONLY)
 
-bin_PROGRAMS = spek
+bin_PROGRAMS = spek_xtra
 
-spek_SOURCES = \
+spek_xtra_SOURCES = \
 	spek-artwork.cc \
 	spek-artwork.h \
 	spek-events.cc \
@@ -48,20 +48,20 @@ spek_SOURCES = \
 	spek-window.h \
 	spek.cc
 
-spek_CPPFLAGS = \
+spek_xtra_CPPFLAGS = \
 	-include config.h \
 	-pthread \
 	$(WX_CPPFLAGS)
 
-spek_CXXFLAGS = \
+spek_xtra_CXXFLAGS = \
 	$(WX_CXXFLAGS_ONLY)
 
-spek_LDADD = \
+spek_xtra_LDADD = \
 	libspek.a \
 	$(AVFORMAT_LIBS) \
 	$(AVCODEC_LIBS) \
 	$(AVUTIL_LIBS) \
 	$(WX_LIBS)
 
-spek_LDFLAGS = \
+spek_xtra_LDFLAGS = \
 	-pthread

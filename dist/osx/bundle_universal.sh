@@ -8,15 +8,15 @@ if [ "${1-}" != "merge_only" ]; then
     ARCH=arm64 ./bundle.sh
 fi
 
-SPEK_X86_64="$(realpath .)/Spek.x86_64.app"
-SPEK_ARM64="$(realpath .)/Spek.arm64.app"
-SPEK_UNIVERSAL="$(realpath .)/Spek.app"
+SPEK_X86_64="$(realpath .)/Spek-Xtra.x86_64.app"
+SPEK_ARM64="$(realpath .)/Spek-Xtra.arm64.app"
+SPEK_UNIVERSAL="$(realpath .)/Spek-Xtra.app"
 
-rm -rf "Spek.app"
-tar xf Spek.x86_64.tgz
-mv "Spek.app" "$SPEK_X86_64"
-tar xf Spek.arm64.tgz
-mv "Spek.app" "$SPEK_ARM64"
+rm -rf "Spek-Xtra.app"
+tar xf Spek-Xtra.x86_64.tgz
+mv "Spek-Xtra.app" "$SPEK_X86_64"
+tar xf Spek-Xtra.arm64.tgz
+mv "Spek-Xtra.app" "$SPEK_ARM64"
 
 cp -a "$SPEK_X86_64" "$SPEK_UNIVERSAL"
 
@@ -47,5 +47,5 @@ codesign -fs - "$SPEK_UNIVERSAL" --deep
 
 # Create a gzip tar archive
 cd "$SPEK_UNIVERSAL/.."
-rm -f Spek.tgz
-tar cvzf Spek.tgz Spek.app
+rm -f Spek-Xtra.tgz
+tar cvzf Spek-Xtra.tgz "Spek-Xtra.app"

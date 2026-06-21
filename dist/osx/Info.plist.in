@@ -5,13 +5,13 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
     <key>CFBundleExecutable</key>
-    <string>Spek</string>
+    <string>Spek-Xtra</string>
     <key>CFBundleGetInfoString</key>
-    <string>Spek-X @VERSION@</string>
+    <string>Spek-Xtra @VERSION@</string>
     <key>CFBundleIconFile</key>
     <string>Spek.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>org.spek-x-project</string>
+    <string>org.spek-xtra-project</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>
@@ -36,7 +36,7 @@
                 <string>Spek.icns</string>
             </array>
             <key>CFBundleTypeName</key>
-            <string>Spek File</string>
+            <string>Spek-Xtra File</string>
             <key>CFBundleTypeRole</key>
             <string>Viewer</string>
             <key>LSHandlerRank</key>

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xeu
 
-# This script will compile spek.exe under MSYS2 and make a ZIP archive.
+# This script will compile spek-xtra.exe under MSYS2 and make a ZIP archive.
 # Check README.md in this directory for instructions.
 
 # Adjust these variables if necessary.
@@ -39,28 +39,28 @@ cd po && "$MAKE" && cd ..
 ./dist/win/compile-rc.py "$WINDRES" "$(CYGPATH "$WX_PREFIX")" $LANGUAGES
 mkdir -p src/dist/win && cp dist/win/spek.res src/dist/win/
 
-# Compile spek.exe
+# Compile spek-xtra.exe
 "$MAKE" V=1 -j "$JOBS" && "$MAKE" install
-"$STRIP" dist/win/build/bin/spek.exe
+"$STRIP" dist/win/build/bin/spek-xtra.exe
 
 # Copy files to the bundle
 cd dist/win
-rm -fr Spek && mkdir Spek
-cp build/bin/spek.exe Spek/
-cp ../../LICENCE.md Spek/
-cp ../../README.md Spek/
-mkdir Spek/licenses
-cp ../../lic/* Spek/licenses/
-for lic in Spek/licenses/*; do
+rm -fr Spek-Xtra && mkdir Spek-Xtra
+cp build/bin/spek-xtra.exe Spek-Xtra/
+cp ../../LICENCE.md Spek-Xtra/
+cp ../../README.md Spek-Xtra/
+mkdir Spek-Xtra/licenses
+cp ../../lic/* Spek-Xtra/licenses/
+for lic in Spek-Xtra/licenses/*; do
     mv "$lic" "$lic.txt"
 done
 rm -fr build
 cd ../..
 
 # Create a zip archive
-cd dist/win/Spek
-rm -f Spek.zip
-"$ZIP" -mr Spek.zip *
+cd dist/win/Spek-Xtra
+rm -f Spek-Xtra.zip
+"$ZIP" -mr Spek-Xtra.zip *
 cd ../../..
 
 # Clean up

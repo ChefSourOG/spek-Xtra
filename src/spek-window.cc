@@ -115,8 +115,8 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     secondary_path(wxEmptyString), pngpath(pngpath), cur_dir(wxEmptyString),
     description(wxEmptyString), active_queue_index(-1)
 {
-    this->description = _("Spek - Acoustic Spectrum Analyser");
-    SetTitle(this->description);
+    this->description = _("Spek-Xtra - Acoustic Spectrum Analyser");
+    SetTitle(_("Spek-Xtra"));
 
 #ifndef OS_OSX
     SetIcons(wxArtProvider::GetIconBundle(ART_SPEK, wxART_FRAME_ICON));
@@ -430,7 +430,7 @@ void SpekWindow::load_file(const wxString& path)
         this->path = absolute_path;
         wxString full_name = file_name.GetFullName();
         // TRANSLATORS: window title, %s is replaced with the file name
-        wxString title = wxString::Format(_("Spek - %s"), full_name.c_str());
+        wxString title = wxString::Format(_("Spek-Xtra - %s"), full_name.c_str());
         SetTitle(title);
 
         this->spectrogram->open(absolute_path, this->pngpath);
@@ -570,7 +570,7 @@ void SpekWindow::remove_queue_item(int index)
 
     if (this->queue_paths.IsEmpty()) {
         this->path.Empty();
-        SetTitle(this->description);
+        SetTitle(_("Spek-Xtra"));
         if (this->menu_file_export) {
             this->menu_file_export->Enable(false);
         }
@@ -588,7 +588,7 @@ void SpekWindow::clear_queue()
     this->save_queue();
 
     this->path.Empty();
-    SetTitle(this->description);
+    SetTitle(_("Spek-Xtra"));
     if (this->menu_file_export) {
         this->menu_file_export->Enable(false);
     }
@@ -827,7 +827,7 @@ void SpekWindow::on_about(wxCommandEvent&)
     if (translator != "translator-credits") {
         info.AddTranslator(translator);
     }
-    info.SetName("Spek-X");
+    info.SetName("Spek-Xtra");
     info.SetVersion(PACKAGE_VERSION);
     info.SetCopyright(_("Copyright (c) 2010-2013 Alexander Kojevnikov and contributors"));
     info.SetDescription(this->description);

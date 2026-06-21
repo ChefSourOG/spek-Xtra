@@ -1,16 +1,16 @@
-# SPEK-X(1) User's Guide | Version 0.9.4
+# SPEK-XTRA(1) User's Guide | Version 1.0.0
 
 ## NAME
 
-Spek-X - Acoustic Spectrum Analyser
+Spek-Xtra - Acoustic Spectrum Analyser
 
 ## SYNOPSIS
 
-`spek` [*OPTION* *...*] \[*FILE*] \[*PNG*] \[*WIDTH*] \[*HEIGHT*]
+`spek-xtra` [*OPTION* *...*] \[*FILE*] \[*PNG*] \[*WIDTH*] \[*HEIGHT*]
 
 ## DESCRIPTION
 
-*Spek-X* generates a spectrogram for the input audio file.
+*Spek-Xtra* generates a spectrogram for the input audio file.
 
 ## ARGUMENTS
 
@@ -82,8 +82,8 @@ On macOS use the Command key instead of Ctrl.
 
 ## FILES
 
-*~/.config/spek/preferences*
-:   The configuration file for *Spek-X*, stored in a simple INI format.
+*~/.config/spek-xtra/preferences*
+:   The configuration file for *Spek-Xtra*, stored in a simple INI format.
 
 ## AUTHORS
 
@@ -92,4 +92,4 @@ in the LICENCE.md file distributed with the source code.
 
 ## DISTRIBUTION
 
-The latest version of *Spek-X* may be downloaded from <https://github.com/MikeWang000000/spek-X>.
+The latest version of *Spek-Xtra* may be downloaded from <https://github.com/MikeWang000000/spek-X>.

@@ -6,7 +6,7 @@
 
 有两种软件压缩包可供下载：一个用于 x64 处理器的 ZIP 压缩包，和一个用于 Arm64 处理器的 ZIP 压缩包。32 位的 Windows 系统不被支持。
 
-下载 ZIP 压缩包，在磁盘上的某处解压它，然后运行 `spek.exe`。
+下载 ZIP 压缩包，在磁盘上的某处解压它，然后运行 `spek-xtra.exe`。
 
 ## macOS 系统
 
@@ -18,7 +18,7 @@
 
 ### 二进制软件包
 
-Spek-X
+Spek-Xtra
  * Debian (deb-multimedia): [spek-x](https://deb-multimedia.org/pool/main/s/spek-x-dmo/), 清华镜像: [spek-x](https://mirrors.tuna.tsinghua.edu.cn/debian-multimedia/pool/main/s/spek-x-dmo/)
 
 原 Spek (已经过时)
@@ -42,7 +42,7 @@ Spek-X
 
 您可以使用以下命令启动 Spek：
 
-    src/spek
+    src/spek-xtra
 
 或者安装它：
 

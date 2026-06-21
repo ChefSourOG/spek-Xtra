@@ -1,10 +1,10 @@
-# Spek-X
+# Spek-Xtra
 
 [![CI](https://github.com/MikeWang000000/spek-X/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/MikeWang000000/spek-X/actions/workflows/ci.yml)
 
 [[简体中文 Simplified Chinese]](./README-zh_CN.md)
 
-Spek-X (IPA: /spɛks/) is a fork of [Spek-alternative](https://github.com/withmorten/spek-alternative), which is originally derived from [Spek](https://github.com/alexkay/spek).
+Spek-Xtra (IPA: /spɛks/) is a fork of [Spek-alternative](https://github.com/withmorten/spek-alternative), which is originally derived from [Spek](https://github.com/alexkay/spek).
 
 Spek is an acoustic spectrum analyser written in C and C++. It uses FFmpeg
 libraries for audio decoding and wxWidgets for the GUI.
@@ -15,21 +15,21 @@ Find out more about Spek on its website: <http://spek.cc/>
 
 <img src="./data/spek-screenshot.png" height="500">
 
-## Spek-X 0.9.4 - 2025/2/6
+## Spek-Xtra 1.0.0 - 2026/6/20
 
 ### Sources / Packages
 
 Category                             | Download link
 -------------------------------------|----------------
-Source tarball                       | [v0.9.4.tar.gz](https://github.com/MikeWang000000/spek-X/archive/v0.9.4.tar.gz)
-Windows (x64)                        | [spek-x-0.9.4-windows-x86_64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-windows-x86_64.zip)
-Windows (Arm64)                      | [spek-x-0.9.4-windows-aarch64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-windows-aarch64.zip)
-macOS (Universal)                    | [spek-x-0.9.4-macos-universal.tgz](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-macos-universal.tgz)
+Source tarball                       | [v1.0.0.tar.gz](https://github.com/MikeWang000000/spek-X/archive/v1.0.0.tar.gz)
+Windows (x64)                        | [spek-xtra-1.0.0-windows-x86_64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-windows-x86_64.zip)
+Windows (Arm64)                      | [spek-xtra-1.0.0-windows-aarch64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-windows-aarch64.zip)
+macOS (Universal)                    | [spek-xtra-1.0.0-macos-universal.tgz](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-macos-universal.tgz)
 Debian packages (deb-multimedia.org) | [spek-x-dmo/](https://deb-multimedia.org/pool/main/s/spek-x-dmo/)
 
 ### New Features And Enhancements
 
-Spek-X 0.9.4 Updates:
+Spek-Xtra 1.0.0 Updates:
  * Upgrade to FFmpeg 7.1.
  * Replace deprecated FFmpeg APIs.
  * macOS version is now distributed as a Universal Binary.

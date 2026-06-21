@@ -1,8 +1,8 @@
-# Spek-X
+# Spek-Xtra
 
 [[英文 English]](./README.md)
 
-Spek-X (IPA: /spɛks/) 是 [Spek-alternative](https://github.com/withmorten/spek-alternative) 的一个 fork 项目，它最初源自 [Spek](https://github.com/alexkay/spek)。
+Spek-Xtra (IPA: /spɛks/) 是 [Spek-alternative](https://github.com/withmorten/spek-alternative) 的一个 fork 项目，它最初源自 [Spek](https://github.com/alexkay/spek)。
 
 Spek 是一个用 C 和 C++ 编写的声学频谱分析器。它使用 FFmpeg 库进行音频解码，并使用 wxWidgets 构建图形用户界面。
 
@@ -12,21 +12,21 @@ Spek 可用于 *BSD、GNU/Linux、Windows 和 macOS.
 
 <img src="./data/spek-screenshot.png" height="500">
 
-## Spek-X 0.9.4 - 2025/2/6
+## Spek-Xtra 1.0.0 - 2026/6/20
 
 ### Sources / Packages
 
 Category                             | Download link
 -------------------------------------|----------------
-源代码包                             | [v0.9.4.tar.gz](https://github.com/MikeWang000000/spek-X/archive/v0.9.4.tar.gz)
-Windows (x64)                        | [spek-x-0.9.4-windows-x86_64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-windows-x86_64.zip)
-Windows (Arm64)                      | [spek-x-0.9.4-windows-aarch64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-windows-aarch64.zip)
-macOS (Universal)                    | [spek-x-0.9.4-macos-universal.tgz](https://github.com/MikeWang000000/spek-X/releases/download/v0.9.4/spek-x-0.9.4-macos-universal.tgz)
+源代码包                             | [v1.0.0.tar.gz](https://github.com/MikeWang000000/spek-X/archive/v1.0.0.tar.gz)
+Windows (x64)                        | [spek-xtra-1.0.0-windows-x86_64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-windows-x86_64.zip)
+Windows (Arm64)                      | [spek-xtra-1.0.0-windows-aarch64.zip](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-windows-aarch64.zip)
+macOS (Universal)                    | [spek-xtra-1.0.0-macos-universal.tgz](https://github.com/MikeWang000000/spek-X/releases/download/v1.0.0/spek-xtra-1.0.0-macos-universal.tgz)
 Debian 软件包 (deb-multimedia.org)   | [spek-x-dmo/](https://deb-multimedia.org/pool/main/s/spek-x-dmo/)
 
 ### 新增功能和改进
 
-Spek-X 0.9.4 更新：
+Spek-Xtra 1.0.0 更新：
  * FFmpeg 更新至 7.1。
  * 替换了 FFmpeg 不推荐的 API。
  * macOS 程序现在通过 Universal Binary 的形式发布。

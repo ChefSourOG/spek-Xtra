@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-_Name=Spek
+_Name=Spek-Xtra
 _GenericName=Spectrum Analyser
 _Comment=View spectrograms of your audio files
-_X-GNOME-FullName=Spek Spectrum Analyser
-Exec=spek %f
+_X-GNOME-FullName=Spek-Xtra Spectrum Analyser
+Exec=spek-xtra %f
 Icon=spek
 Terminal=false
 Categories=AudioVideo;Audio;
