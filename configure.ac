@@ -64,6 +64,9 @@ LDFLAGS="$LDFLAGS $AVFORMAT_LIBS $AVCODEC_LIBS $AVUTIL_LIBS"
 if test "$os" = OSX; then
 	LDFLAGS="$LDFLAGS -framework Cocoa"
 fi
+if test "$os" = WIN; then
+	LDFLAGS="$LDFLAGS -lole32 -luuid -lshlwapi -lversion"
+fi
 
 AM_OPTIONS_WXCONFIG
 reqwx=3.0.0

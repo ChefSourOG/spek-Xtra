@@ -244,20 +244,20 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     toolbar->AddCheckTool(
         ID_VIEW_COMPARE_MODE,
         wxEmptyString,
-        wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR),
+        wxArtProvider::GetBitmap(ART_COPY, wxART_TOOLBAR),
         wxNullBitmap,
         _("Show two spectrograms side-by-side")
     );
     toolbar->AddTool(
         ID_VIEW_FIT_WINDOW,
         wxEmptyString,
-        wxArtProvider::GetBitmap(wxART_GO_HOME, wxART_TOOLBAR),
+        wxArtProvider::GetBitmap(ART_HOME, wxART_TOOLBAR),
         _("Reset zoom to fit the full file")
     );
     toolbar->AddTool(
         ID_OPEN_SECONDARY,
         wxEmptyString,
-        wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR),
+        wxArtProvider::GetBitmap(ART_FILE_OPEN, wxART_TOOLBAR),
         _("Open a file in the secondary panel")
     );
     toolbar->AddStretchableSpace();
@@ -371,6 +371,7 @@ SpekWindow::SpekWindow(int width, int height, const wxString& path, const wxStri
     this->compare_splitter->SetMinimumPaneSize(100);
     this->info_panel = new SpekInfoPanel(this->splitter);
     this->splitter->SetMinimumPaneSize(260);
+    this->splitter->Initialize(this->compare_splitter);
 
     wxBoxSizer *right_sizer = new wxBoxSizer(wxVERTICAL);
     right_sizer->Add(this->info_bar, 0, wxEXPAND);

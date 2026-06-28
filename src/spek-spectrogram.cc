@@ -422,7 +422,6 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
     dc.SetFont(large_font);
     int large_height = dc.GetTextExtent("dummy").GetHeight();
     dc.SetFont(small_font);
-    int small_height = dc.GetTextExtent("dummy").GetHeight();
 
     // Clean the background.
     dc.Clear();
@@ -430,17 +429,28 @@ void SpekSpectrogram::render(wxDC& dc, int width, int height)
     // Spek version
     dc.SetFont(normal_bold_font);
     wxString package_name(PACKAGE_NAME);
+    wxString version_text(PACKAGE_VERSION);
+    int package_name_width = dc.GetTextExtent(package_name).GetWidth();
+    dc.SetFont(small_font);
+    int version_width = dc.GetTextExtent(version_text).GetWidth();
+    int version_height = dc.GetTextExtent(version_text).GetHeight();
+    int total_width = package_name_width + version_width;
+    // Keep the text inside the spectrogram area, right-aligned with a small gap.
+    int text_x = w - GAP - total_width;
+    if (text_x < LPAD + GAP) {
+        text_x = LPAD + GAP;
+    }
+    dc.SetFont(normal_bold_font);
     dc.DrawText(
         package_name,
-        w - RPAD + GAP,
+        text_x,
         TPAD - 2 * GAP - normal_height - normal_height
     );
-    int package_name_width = dc.GetTextExtent(package_name + " ").GetWidth();
     dc.SetFont(small_font);
     dc.DrawText(
-        PACKAGE_VERSION,
-        w - RPAD + GAP + package_name_width,
-        TPAD - 2 * GAP - normal_height - small_height
+        version_text,
+        text_x + package_name_width,
+        TPAD - 2 * GAP - normal_height - version_height
     );
 
     int plot_w = w - LPAD - RPAD;

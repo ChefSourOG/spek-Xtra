@@ -1,7 +1,7 @@
-Source: spek-x
+Source: spek-xtra
 Section: sound
 Priority: optional
-Maintainer: MikeWang000000 <mikewang000000@gmail.com>
+Maintainer: ChefSourOG <https://github.com/ChefSourOG>
 Build-Depends: debhelper (>= 9),
                autotools-dev,
                pkg-config,
@@ -12,14 +12,14 @@ Build-Depends: debhelper (>= 9),
                libwxgtk3.2-dev,
                wx-common
 Standards-Version: 3.9.6
-Homepage: https://github.com/MikeWang000000/spek-X
+Homepage: https://github.com/ChefSourOG/spek-Xtra
 
-Package: spek-x
+Package: spek-xtra
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends}
 Description: acoustic spectrum analyser
- Spek helps to analyse your audio files by showing their spectrogram.
+ Spek-Xtra helps to analyse your audio files by showing their spectrogram.
  It supports all popular lossy and lossless audio file formats.
  .
  Features:

@@ -23,6 +23,7 @@ dist/osx/Info.plist
 dist/osx/Spek-Xtra.app
 dist/osx/Spek-Xtra.dmg
 dist/win/Spek-Xtra
+dist/win/spek.res
 dist/win/spek.wxs
 dist/win/tests
 env
@@ -32,7 +33,6 @@ intltool-merge.in
 intltool-update.in
 libtool
 ltmain.sh
-man/spek-xtra.1
 missing
 mkinstalldirs
 omf.make
@@ -50,4 +50,21 @@ tests/samples/perf.wav
 tests/test
 web/version
 xmldocs.make
+
+# Build / distribution artifacts
+output/
+dist/win/build/
+dist/osx/build/
+*.deb
+*.dmg
+*.tar.gz
+
+# Logo generation cache and raw sources
+scripts/.icon-cache/
+data/icons/scalable/Flux2_00044_.png
+
+# Python virtual environments
+.venv/
+venv/
+
 .git-backup/

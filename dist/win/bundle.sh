@@ -47,7 +47,7 @@ mkdir -p src/dist/win && cp dist/win/spek.res src/dist/win/
 cd dist/win
 rm -fr Spek-Xtra && mkdir Spek-Xtra
 cp build/bin/spek-xtra.exe Spek-Xtra/
-cp ../../LICENCE.md Spek-Xtra/
+cp ../../LICENSE.md Spek-Xtra/
 cp ../../README.md Spek-Xtra/
 mkdir Spek-Xtra/licenses
 cp ../../lic/* Spek-Xtra/licenses/
@@ -65,4 +65,3 @@ cd ../../..
 
 # Clean up
 rm -fr src/dist
-rm dist/win/spek.res

@@ -1,0 +1,115 @@
+.TH SPEK-XTRA 1 "2026\-06\-20" "User\[aq]s Guide" "Version 1.0.0"
+.SH NAME
+.PP
+Spek-Xtra \- Acoustic Spectrum Analyser
+.SH SYNOPSIS
+.PP
+\f[C]spek-xtra\f[] [\f[I]OPTION\f[] \f[I]\&...\f[]] [\f[I]FILE\f[]] [\f[I]PNG\f[]] [\f[I]WIDTH\f[]] [\f[I]HEIGHT\f[]]
+.SH DESCRIPTION
+.PP
+\f[I]Spek-Xtra\f[] generates a spectrogram for the input audio file.
+.SH ARGUMENTS
+.TP
+\f[I]FILE\f[]
+Audio file to be analyzed.
+.TP
+\f[I]PNG\f[]
+Write spectrogram to this PNG file then exit.
+.TP
+\f[I]WIDTH\f[]
+Initial width of the spectrum in pixels.
+.TP
+\f[I]HEIGHT\f[]
+Initial height of the spectrum in pixels.
+.SH OPTIONS
+.TP
+.B \f[C]\-h\f[], \f[C]\-\-help\f[]
+Output the help message then quit.
+.RS
+.RE
+.TP
+.B \f[C]\-V\f[], \f[C]\-\-version\f[]
+Output version information then quit.
+.RS
+.RE
+.SH KEYBINDINGS
+.SS Notes
+.PP
+On macOS use the Command key instead of Ctrl.
+.SS Menu
+.TP
+.B \f[C]Ctrl\-O\f[]
+Open a new file.
+.RS
+.RE
+.TP
+.B \f[C]Ctrl\-S\f[]
+Save the spectrogram as an image file.
+.RS
+.RE
+.TP
+.B \f[C]Ctrl\-E\f[]
+Show the preferences dialog.
+.RS
+.RE
+.TP
+.B \f[C]F1\f[]
+Open online manual in the browser.
+.RS
+.RE
+.TP
+.B \f[C]Shift\-F1\f[]
+Show the about dialog.
+.RS
+.RE
+.SS Spectrogram
+.TP
+.B \f[C]c\f[], \f[C]C\f[]
+Change the audio channel.
+.RS
+.RE
+.TP
+.B \f[C]f\f[], \f[C]F\f[]
+Change the DFT window function.
+.RS
+.RE
+.TP
+.B \f[C]l\f[], \f[C]L\f[]
+Change the lower limit of the dynamic range in dBFS.
+.RS
+.RE
+.TP
+.B \f[C]p\f[], \f[C]P\f[]
+Change the palette.
+.RS
+.RE
+.TP
+.B \f[C]s\f[], \f[C]S\f[]
+Change the audio stream.
+.RS
+.RE
+.TP
+.B \f[C]u\f[], \f[C]U\f[]
+Change the upper limit of the dynamic range in dBFS.
+.RS
+.RE
+.TP
+.B \f[C]w\f[], \f[C]W\f[]
+Change the DFT window size.
+.RS
+.RE
+.SH FILES
+.TP
+.B \f[I]~/.config/spek-xtra/preferences\f[]
+The configuration file for \f[I]Spek-Xtra\f[], stored in a simple INI format.
+.RS
+.RE
+.SH AUTHORS
+.PP
+Alexander Kojevnikov <alexander@kojevnikov.com>.
+Other contributors are listed in the LICENSE.md file distributed with
+the source code.
+.SH DISTRIBUTION
+.PP
+The latest version of \f[I]Spek-Xtra\f[] may be downloaded from
+<https://github.com/MikeWang000000/spek-X>.

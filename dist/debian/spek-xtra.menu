@@ -1,0 +1,7 @@
+?package(spek-xtra):\
+needs="X11"\
+section="Applications/Sound"\
+title="Spek-Xtra"\
+longtitle="Spectrum analyser"\
+icon="/usr/share/pixmaps/spek-xtra.xpm"\
+command="/usr/bin/spek-xtra"

@@ -7,7 +7,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	INSTALL.md \
-	LICENCE.md \
+	LICENSE.md \
 	MANUAL.md \
 	README.md \
 	intltool-extract.in \

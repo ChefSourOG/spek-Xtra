@@ -7,7 +7,7 @@ context = apps
 iconsdir = $(themedir)/$(size)/$(context)
 
 icons_DATA = \
-	spek.svg
+	spek.png
 
 EXTRA_DIST = \
 	$(icons_DATA)

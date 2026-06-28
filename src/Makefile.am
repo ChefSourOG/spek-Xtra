@@ -23,7 +23,7 @@ libspek_a_CXXFLAGS = \
 	$(AVUTIL_CFLAGS) \
 	$(WX_CXXFLAGS_ONLY)
 
-bin_PROGRAMS = spek_xtra
+bin_PROGRAMS = spek-xtra
 
 spek_xtra_SOURCES = \
 	spek-artwork.cc \

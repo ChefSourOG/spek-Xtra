@@ -32,17 +32,25 @@ wxBitmap SpekArtProvider::CreateBitmap(
     }
 #endif
 #ifdef OS_WIN
-    if (id == ART_HELP) {
-        return wxIcon("help", wxBITMAP_TYPE_ICO_RESOURCE, 24, 24);
+    wxSize icon_size = size;
+    if (icon_size == wxDefaultSize) {
+        icon_size = wxArtProvider::GetSizeHint(client);
     }
-    if (id == ART_OPEN) {
-        return wxIcon("open", wxBITMAP_TYPE_ICO_RESOURCE, 24, 24);
+    if (icon_size == wxDefaultSize) {
+        icon_size = wxSize(24, 24);
     }
-    if (id == ART_SAVE) {
-        return wxIcon("save", wxBITMAP_TYPE_ICO_RESOURCE, 24, 24);
-    }
-    if (id == ART_CLOSE) {
-        return wxIcon("close", wxBITMAP_TYPE_ICO_RESOURCE, 16, 16);
+
+    const char *resource = NULL;
+    if (id == ART_HELP)        resource = "help";
+    else if (id == ART_OPEN)   resource = "open";
+    else if (id == ART_SAVE)   resource = "save";
+    else if (id == ART_CLOSE)  resource = "close";
+    else if (id == ART_COPY)   resource = "copy";
+    else if (id == ART_HOME)   resource = "home";
+    else if (id == ART_FILE_OPEN) resource = "fileopen";
+
+    if (resource) {
+        return wxBitmap(wxIcon(resource, wxBITMAP_TYPE_ICO_RESOURCE, icon_size.x, icon_size.y));
     }
 #endif
 #ifdef OS_OSX

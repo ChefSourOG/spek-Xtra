@@ -211,5 +211,5 @@ Constants of note:
 - `README.md` — project overview and changelog.
 - `INSTALL.md` — installation and build instructions.
 - `MANUAL.md` — user manual, command-line usage, and keybindings.
-- `LICENCE.md` — authors, translators, and third-party licence notes.
+- `LICENSE.md` — authors, translators, and third-party licence notes.
 - `dist/win/README.md`, `dist/osx/README.md` — platform-specific build details.

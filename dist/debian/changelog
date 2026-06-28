@@ -1,3 +1,11 @@
+spek-xtra (1.0.0-1) unstable; urgency=medium
+
+  * Rebrand fork as Spek-Xtra.
+  * New logo and application icons.
+  * Modernised toolbar icons.
+
+ -- ChefSourOG <https://github.com/ChefSourOG>  Fri, 20 Jun 2026 00:00:00 +0000
+
 spek-x (0.9.4-1) unstable; urgency=low
 
   * Replace deprecated FFmpeg APIs
