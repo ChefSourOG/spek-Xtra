@@ -57,6 +57,9 @@ build_wxwidgets()
     fi
     cd "wxWidgets-$WX_VER"
 
+    # macOS SDKs no longer ship the classic Carbon fp.h header.
+    patch -p1 < ../../wx-fp.patch
+
     # CMake 4.0+ no longer supports cmake_minimum_required() < 3.5.
     export CMAKE_POLICY_VERSION_MINIMUM=3.5
 

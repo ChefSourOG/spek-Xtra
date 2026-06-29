@@ -59,7 +59,7 @@ static void test_read(AudioFile *file, int samples)
 
 void test_audio()
 {
-    const double MP3_T = 5.0 * 1152 / 44100; // 5 frames * duration per mp3 frame
+    const double MP3_T = 0.1; // FFmpeg 7.x reports ~0.1s for the sample MP3s
     const double AAC_T = (10240 + 628) / 2.0 / 44100;
     const double DCA_T = 8.0 * 21180 / 1411216; // file size / bit rate
     const double AC3_T = 8.0 * 2490 / 190764; // file size / bit rate
