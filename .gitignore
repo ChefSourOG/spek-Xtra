@@ -51,6 +51,9 @@ tests/test
 web/version
 xmldocs.make
 
+# Deprecated files
+*.old
+
 # Build / distribution artifacts
 output/
 dist/win/build/
