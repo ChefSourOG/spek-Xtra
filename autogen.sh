@@ -6,6 +6,7 @@ test -n "$srcdir" || srcdir=.
 (
   cd "$srcdir" &&
   touch config.rpath &&
+  mkdir -p m4 &&
   # gettext >= 0.25 installs its m4 macros under share/gettext/m4 instead of
   # share/aclocal. Make sure aclocal can find them on modern distributions.
   GETTEXT_M4_DIRS=""
