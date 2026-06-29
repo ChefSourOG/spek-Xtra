@@ -38,6 +38,9 @@ install_homebrew_deps()
         exit 1
     }
     brew install -q autoconf automake gettext intltool libtool pkg-config yasm wget coreutils
+    # Use GNU coreutils (sha256sum etc.) without the 'g' prefix.
+    PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+    export PATH
 }
 
 build_wxwidgets()

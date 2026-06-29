@@ -14,6 +14,7 @@ env:
   HOMEBREW_NO_ANALYTICS: 1
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
+  HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
 
 jobs:
   Build-Debian-x86_64:
@@ -27,7 +28,7 @@ jobs:
         run: |
           apt update
           apt full-upgrade -y
-          apt install -y g++ make pkg-config libtool intltool libwxgtk3.2-dev wx-common libavcodec-dev libavformat-dev
+          apt install -y g++ make pkg-config libtool intltool gettext autopoint libwxgtk3.2-dev wx-common libavcodec-dev libavformat-dev
       - name: Compile and bundle application
         run: |
           mkdir -p ./dist/debian/spek-x/usr ./dist/debian/spek-x/DEBIAN
@@ -47,21 +48,26 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: cmd
+        shell: msys2 {0}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Get dependencies from cache
-        uses: actions/cache/restore@v4
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
         with:
-          key: spek-x-msys2-mingw64
-          path: C:\msys2
-      - name: Check whether MSYS2 is working
-        run: |
-          "C:\msys2\msys64\usr\bin\env.exe" MSYSTEM=MINGW64 /usr/bin/bash -lc "echo OK"
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            zip
+      - name: Build dependencies
+        run: ./dist/win/install_deps.sh
       - name: Compile and bundle application
-        run: |
-          "C:\msys2\msys64\usr\bin\env.exe" MSYSTEM=MINGW64 /usr/bin/bash -lc "cd '${{ github.workspace }}' && ./dist/win/bundle.sh"
+        run: ./dist/win/bundle.sh
       - name: Archive ZIP artifact
         uses: actions/upload-artifact@v4
         with:
@@ -155,7 +161,7 @@ jobs:
         run: |
           apt update
           apt full-upgrade -y
-          apt install -y g++ make pkg-config libtool intltool libwxgtk3.2-dev wx-common libavcodec-dev libavformat-dev
+          apt install -y g++ make pkg-config libtool intltool gettext autopoint libwxgtk3.2-dev wx-common libavcodec-dev libavformat-dev
       - name: Run tests
         run: |
           ./autogen.sh && make check
