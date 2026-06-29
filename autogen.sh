@@ -3,6 +3,10 @@
 
 test -n "$srcdir" || srcdir=$(dirname "$0")
 test -n "$srcdir" || srcdir=.
+command -v autoreconf >/dev/null 2>&1 || {
+  echo "autoreconf not found. Please install autoconf, automake, libtool, intltool, gettext and autopoint." >&2
+  exit 1
+}
 (
   cd "$srcdir" &&
   touch config.rpath &&

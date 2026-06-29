@@ -34,14 +34,22 @@ Original Spek (Outdated)
 
 ### Building from the git repository
 
-    git clone https://github.com/MikeWang000000/spek-X.git
-    cd spek-X
+    git clone https://github.com/ChefSourOG/spek-Xtra.git
+    cd spek-Xtra
     ./autogen.sh
     make
 
-To build you will need wxWidgets and FFmpeg packages. On Debian/Ubuntu you also
-need development packages: `libwxgtk3.0-dev`, `wx-common`, `libavcodec-dev` and
-`libavformat-dev`.
+To build from git you need the GNU autotools plus wxWidgets and FFmpeg
+packages. On Debian/Ubuntu install:
+
+```bash
+sudo apt install -y g++ make pkg-config autoconf automake libtool \
+    intltool gettext autopoint libwxgtk3.2-dev wx-common \
+    libavcodec-dev libavformat-dev
+```
+
+(On older distributions you may need `libwxgtk3.0-dev` instead of
+`libwxgtk3.2-dev`.)
 
 To start Spek, run:
 

@@ -165,6 +165,16 @@ Platform-specific build instructions are maintained in the following guides:
 
 ### Quick Build (Linux/macOS)
 
+Install the build dependencies first. On Debian/Ubuntu:
+
+```bash
+sudo apt install -y g++ make pkg-config autoconf automake libtool \
+    intltool gettext autopoint libwxgtk3.2-dev wx-common \
+    libavcodec-dev libavformat-dev
+```
+
+Then build:
+
 ```bash
 git clone https://github.com/ChefSourOG/spek-Xtra.git
 cd spek-Xtra
