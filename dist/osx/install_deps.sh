@@ -57,6 +57,9 @@ build_wxwidgets()
     fi
     cd "wxWidgets-$WX_VER"
 
+    # CMake 4.0+ no longer supports cmake_minimum_required() < 3.5.
+    export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
     mkdir "builddir.$ARCH"
     cd "builddir.$ARCH"
     cmake .. \

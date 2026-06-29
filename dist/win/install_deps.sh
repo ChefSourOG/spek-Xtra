@@ -15,7 +15,7 @@ FFMPEG_SHA="fd59e6160476095082e94150ada5a6032d7dcc282fe38ce682a00c18e7820528"
 
 PREFIX="$MINGW_PREFIX"
 
-pacman -Sy && pacman -S --needed --noconfirm autotools patch intltool yasm zip "${MINGW_PACKAGE_PREFIX}-toolchain"
+pacman -Sy && pacman -S --needed --noconfirm autotools patch intltool yasm zip gettext wget "${MINGW_PACKAGE_PREFIX}-toolchain"
 
 rm -rf $(dirname $0)/deps
 mkdir -p $(dirname $0)/deps
