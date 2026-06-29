@@ -57,11 +57,15 @@ done
 rm -fr build
 cd ../..
 
-# Create a zip archive
+# Create a zip archive (keep the unpacked files so the standalone .exe can also
+# be uploaded as a release artifact).
 cd dist/win/Spek-Xtra
 rm -f Spek-Xtra.zip
-"$ZIP" -mr Spek-Xtra.zip *
-cd ../../..
+cd ..
+rm -f Spek-Xtra.zip
+"$ZIP" -r Spek-Xtra.zip Spek-Xtra
+cp Spek-Xtra.zip Spek-Xtra/Spek-Xtra.zip
+cd ../..
 
 # Clean up
 rm -fr src/dist
